@@ -67,7 +67,7 @@ public class ClubApplicationService {
         Membership membership = Membership.builder()
                 .user(app.getSubmittedBy())
                 .club(club)
-                .role(Role.ADMIN)
+                .role(Role.CLUB_ADMIN)
                 .status("APPROVED")
                 .build();
         membershipRepository.save(membership);

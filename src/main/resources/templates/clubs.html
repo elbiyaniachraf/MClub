@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>Clubs</title>
@@ -13,7 +14,8 @@
             <h2 class="display-6"><i class="bi bi-people-fill text-primary"></i> Clubs Collection</h2>
         </div>
         <div class="col-auto">
-            <a class="btn btn-primary shadow-sm" th:href="@{/club-applications/apply}">Apply to Start a Club</a>
+            <a class="btn btn-primary shadow-sm" th:href="@{/club-applications/apply}" sec:authorize="!hasRole('PLATFORM_ADMIN')">Apply to Start a Club</a>
+            <a class="btn btn-success shadow-sm" th:href="@{/api/clubs}" sec:authorize="hasRole('PLATFORM_ADMIN')">Create Club (API)</a>
         </div>
     </div>
 
@@ -30,16 +32,16 @@
                 <div class="card-body">
                     <p class="card-text text-muted" th:text="${club.description}">Club description...</p>
                 </div>
-                <div class="card-footer bg-white border-0 d-flex justify-content-between p-3">
+            <div class="card-footer bg-white border-0 d-flex justify-content-between p-3">
                     <button class="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</button>
-                    <form th:action="@{/memberships/club/{id}/join(id=${club.id})}" method="post">
+                    <form th:action="@{/memberships/club/{id}/join(id=${club.id})}" method="post" sec:authorize="!hasRole('PLATFORM_ADMIN')">
                         <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">Join Club</button>
                     </form>
                 </div>
             </div>
         </div>
 
-        <div class="col-12" th:if="${clubsPage.empty}">
+        <div class="col-12" th:if="${clubsPage.isEmpty()}">
             <div class="alert alert-info border-0 rounded-3 shadow-sm" role="alert">
                 <h4 class="alert-heading">No clubs yet!</h4>
                 <p>There are no clubs created at this moment. Please check back later.</p>

@@ -19,7 +19,7 @@ public class MembershipController {
         return ResponseEntity.ok(membershipService.joinClub(clubId, auth.getName()));
     }
     @PutMapping("/{membershipId}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'CLUB_ADMIN')")
     public ResponseEntity<MembershipDto> updateStatus(@PathVariable UUID membershipId, @RequestParam String status) {
         return ResponseEntity.ok(membershipService.updateStatus(membershipId, status));
     }

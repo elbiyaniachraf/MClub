@@ -37,14 +37,14 @@ public class WebClubApplicationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public String viewApplications(Model model) {
         model.addAttribute("applications", applicationService.getPendingApplications());
         return "club-applications";
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public String approve(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
         try {
             applicationService.approveApplication(id);
@@ -56,7 +56,7 @@ public class WebClubApplicationController {
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public String reject(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
         try {
             applicationService.rejectApplication(id);

@@ -16,7 +16,7 @@ public class EventController {
     private final RegistrationService registrationService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'CLUB_ADMIN')")
     public ResponseEntity<EventDto> createEvent(@RequestBody EventDto dto, Authentication auth) {
         return ResponseEntity.ok(eventService.createEvent(dto, auth.getName()));
     }
@@ -30,7 +30,7 @@ public class EventController {
         return ResponseEntity.ok(registrationService.register(eventId, auth.getName()));
     }
     @GetMapping("/{eventId}/participants")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN', 'CLUB_ADMIN')")
     public ResponseEntity<List<RegistrationDto>> getParticipants(@PathVariable UUID eventId) {
         return ResponseEntity.ok(registrationService.getRegistrations(eventId));
     }

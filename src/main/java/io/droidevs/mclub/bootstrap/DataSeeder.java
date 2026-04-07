@@ -39,7 +39,7 @@ public class DataSeeder implements CommandLineRunner {
                 .fullName("System Administrator")
                 .email("admin@mclub.com")
                 .password(passwordEncoder.encode("admin123"))
-                .role(Role.ADMIN)
+                .role(Role.PLATFORM_ADMIN)
                 .build();
         userRepository.save(admin);
 
@@ -51,6 +51,15 @@ public class DataSeeder implements CommandLineRunner {
                 .role(Role.MEMBER)
                 .build();
         userRepository.save(member);
+
+        // Create Club Admin User
+        User clubAdmin = User.builder()
+                .fullName("Club Manager")
+                .email("manager@mclub.com")
+                .password(passwordEncoder.encode("manager123"))
+                .role(Role.CLUB_ADMIN)
+                .build();
+        userRepository.save(clubAdmin);
 
         log.info("Seeding clubs...");
         // Create Clubs

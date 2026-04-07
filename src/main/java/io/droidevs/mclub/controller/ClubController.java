@@ -16,7 +16,7 @@ public class ClubController {
     private final ClubService clubService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
     public ResponseEntity<ClubDto> createClub(@RequestBody ClubDto dto, Authentication auth) {
         return ResponseEntity.ok(clubService.createClub(dto, auth.getName()));
     }
