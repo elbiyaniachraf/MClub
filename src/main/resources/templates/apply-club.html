@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <div th:replace="~{layout :: head}"></div>
-    <title>Apply for a New Club</title>
-</head>
-<body>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{::div})}">
 
-<div th:replace="~{layout.html :: body(content=~{::div.container})}">
 <div class="container">
     <div class="row mt-5 justify-content-center">
         <div class="col-md-8">
@@ -16,7 +12,8 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="alert alert-info py-3 mb-4" role="alert">
-                        <i class="bi bi-info-circle-fill me-2"></i>All club applications will be reviewed by the school administration before approval.
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        All club applications will be reviewed by the school administration before approval.
                     </div>
 
                     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
@@ -24,11 +21,14 @@
                     <form th:action="@{/club-applications/submit}" method="post">
                         <div class="mb-4">
                             <label for="name" class="form-label fw-bold">Proposed Club Name</label>
-                            <input type="text" class="form-control bg-light py-2" id="name" name="name" placeholder="e.g. Debate Club" required>
+                            <input type="text" class="form-control bg-light py-2" id="name" name="name"
+                                   placeholder="e.g. Debate Club" required>
                         </div>
                         <div class="mb-4">
                             <label for="description" class="form-label fw-bold">Club Description</label>
-                            <textarea class="form-control bg-light" id="description" name="description" rows="5" placeholder="Describe the club's activities, goals, and why it should be created..." required></textarea>
+                            <textarea class="form-control bg-light" id="description" name="description" rows="5"
+                                      placeholder="Describe the club's activities, goals, and why it should be created..."
+                                      required></textarea>
                         </div>
                         <div class="d-flex justify-content-between mt-4">
                             <a th:href="@{/clubs}" class="btn btn-outline-secondary px-4 py-2">Cancel</a>
@@ -39,7 +39,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 
 </body>

@@ -55,17 +55,25 @@ public class ClubApplicationService {
         app.setStatus("APPROVED");
         applicationRepository.save(app);
 
+        User submitter = app.getSubmittedBy();
+
+        // Update user role if they are just a MEMBER
+        if (submitter.getRole() == Role.MEMBER) {
+            submitter.setRole(Role.CLUB_ADMIN);
+            userRepository.save(submitter);
+        }
+
         // Create the club based on the application
         Club club = Club.builder()
                 .name(app.getName())
                 .description(app.getDescription())
-                .createdBy(app.getSubmittedBy())
+                .createdBy(submitter)
                 .build();
         club = clubRepository.save(club);
 
         // Assign the user who submitted the application as the Club Admin
         Membership membership = Membership.builder()
-                .user(app.getSubmittedBy())
+                .user(submitter)
                 .club(club)
                 .role(Role.CLUB_ADMIN)
                 .status("APPROVED")

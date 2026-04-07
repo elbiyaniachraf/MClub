@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{::div[@class='container']})}" class="bg-light">
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people-fill text-primary"></i> <span th:text="${club.name}"></span> Members</h2>
+        <a th:href="@{/club-admin/clubs}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Managed Clubs</a>
+    </div>
+
+    <div th:if="${message}" class="alert alert-success mt-2" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger mt-2" th:text="${error}"></div>
+
+    <div class="card shadow-sm border-0 mt-4 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 align-middle">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th class="ps-4">User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Date Joined</th>
+                            <th class="pe-4 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="member : ${members}">
+                            <td class="ps-4 fw-bold text-dark" th:text="${member.user.fullName}"></td>
+                            <td><span class="badge bg-secondary rounded-pill" th:text="${member.role}"></span></td>
+                            <td>
+                                <span class="badge status-badge"
+                                      th:classappend="${member.status == 'PENDING'} ? 'status-pending' : (${member.status == 'APPROVED'} ? 'status-approved' : 'status-rejected')"
+                                      th:text="${member.status}"></span>
+                            </td>
+                            <td class="text-muted" th:text="${#temporals.format(member.joinedAt, 'dd MMM yyyy HH:mm')}"></td>
+                            <td class="pe-4 text-end">
+
+                                <!-- Form block for admin actions, shown only if user is not himself an admin -->
+                                <div class="d-flex gap-2 justify-content-end" th:if="${member.role.name() != 'CLUB_ADMIN'}">
+
+                                    <!-- Action to Approve (only if PENDING) -->
+                                    <form th:if="${member.status == 'PENDING'}" th:action="@{/club-admin/memberships/{id}/status(id=${member.id})}" method="post">
+                                        <input type="hidden" name="status" value="APPROVED"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> Accept</button>
+                                    </form>
+
+                                    <!-- Action to Kick -->
+                                    <form th:action="@{/club-admin/memberships/{id}/kick(id=${member.id})}" method="post">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to kick this member?');"><i class="bi bi-x-octagon"></i> Kick Out</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div th:if="${#lists.isEmpty(members)}" class="text-center p-5 text-muted">
+                    <h5><i class="bi bi-emoji-neutral text-secondary" style="font-size: 2rem;"></i></h5>
+                    <p>No members currently.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .status-badge {
+        font-size: 0.9em;
+        padding: 8px 12px;
+        border-radius: 12px;
+    }
+    .status-pending { background-color: #ffd700; color: #fff; }
+    .status-approved { background-color: #28a745; color: #fff; }
+    .status-rejected { background-color: #dc3545; color: #fff; }
+</style>
+
+</body>
+</html>

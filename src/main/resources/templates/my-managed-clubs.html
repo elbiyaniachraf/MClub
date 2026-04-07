@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{::div[@class='container']})}">
+
+<div class="container mt-4">
+    <h2><i class="bi bi-gear-fill"></i> My Managed Clubs</h2>
+
+    <div th:if="${message}" class="alert alert-success mt-2" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger mt-2" th:text="${error}"></div>
+
+    <div class="row mt-4">
+        <div class="col-md-4" th:each="club : ${clubs}">
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary" th:text="${club.name}"></h5>
+                    <p class="card-text text-muted" th:text="${club.description}"></p>
+                    <a th:href="@{/club-admin/clubs/{id}/members(id=${club.id})}"
+                       class="btn btn-outline-primary btn-sm rounded-pill mt-3">
+                        <i class="bi bi-people"></i> Manage Members
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" th:if="${#lists.isEmpty(clubs)}">
+            <div class="alert alert-info">
+                You do not manage any clubs currently. Submit a club application to get started.
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

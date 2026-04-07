@@ -3,7 +3,7 @@
 <head th:replace="~{layout.html::head}"></head>
 <!-- actually, we can directly create views that inject into basic body -->
 <body>
-<div th:replace="~{layout.html :: body(content=~{::div.container})}">
+<div th:replace="~{layout.html :: body(~{::div.container})}">
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-5">

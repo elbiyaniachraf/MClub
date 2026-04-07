@@ -1,13 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      xmlns:sec="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="UTF-8">
-    <title>Clubs</title>
-</head>
-<body>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{::div[@class='container']})}">
 
-<div th:replace="~{layout.html :: body(content=~{::div.container})}">
 <div class="container">
     <div class="row align-items-center mt-4 mb-3">
         <div class="col">
@@ -32,9 +27,9 @@
                 <div class="card-body">
                     <p class="card-text text-muted" th:text="${club.description}">Club description...</p>
                 </div>
-            <div class="card-footer bg-white border-0 d-flex justify-content-between p-3">
+                <div class="card-footer bg-white border-0 d-flex justify-content-between p-3">
                     <button class="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</button>
-                    <form th:action="@{/memberships/club/{id}/join(id=${club.id})}" method="post" sec:authorize="!hasRole('PLATFORM_ADMIN')">
+                    <form th:action="@{/memberships/club/{id}/join(id=${club.id})}" method="post" sec:authorize="isAuthenticated() and !hasRole('PLATFORM_ADMIN')">
                         <button type="submit" class="btn btn-success btn-sm rounded-pill px-3">Join Club</button>
                     </form>
                 </div>
@@ -67,7 +62,6 @@
         </ul>
     </nav>
 
-</div>
 </div>
 
 </body>

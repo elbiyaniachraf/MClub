@@ -1,16 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>MClub Dashboard</title>
-</head>
-<body>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{::div})}">
 
-<div th:replace="~{layout.html :: body(content=~{::div.container})}">
 <div class="container">
     <div class="row mt-4">
         <div class="col-12 text-center mb-4">
             <h1 class="display-5">Welcome back, <span th:text="${username}">User</span>!</h1>
-            <p class="lead text-muted">Manage your clubs, join events, and stay active.</p>
+            <p class="lead text-muted" sec:authorize="hasRole('PLATFORM_ADMIN')">Platform Administrator Dashboard: Manage all applications, clubs, and events.</p>
+            <p class="lead text-muted" sec:authorize="hasRole('CLUB_ADMIN')">Club Administrator Dashboard: Manage your clubs, join events, and stay active.</p>
+            <p class="lead text-muted" sec:authorize="hasRole('MEMBER')">Member Dashboard: Join clubs, explore events, and stay active.</p>
         </div>
     </div>
 
@@ -53,8 +52,11 @@
                             <div class="ms-2 me-auto">
                                 <div class="fw-bold" th:text="${event.title}">Event Title</div>
                                 <div class="text-muted small">
-                                    <i class="bi bi-calendar"></i> <span th:text="${#temporals.format(event.startDate, 'dd MMM yyyy HH:mm')}">Date</span>
-                                    | <i class="bi bi-geo-alt"></i> <span th:text="${event.location}">Location</span>
+                                    <i class="bi bi-calendar"></i>
+                                    <span th:text="${#temporals.format(event.startDate, 'dd MMM yyyy HH:mm')}">Date</span>
+                                    |
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span th:text="${event.location}">Location</span>
                                 </div>
                             </div>
                         </li>
@@ -69,7 +71,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 
 </body>

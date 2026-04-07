@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Events</title>
-</head>
-<body>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{::div[@class='container']})}">
 
-<div th:replace="~{layout.html :: body(content=~{::div.container})}">
 <div class="container">
     <div class="row align-items-center mt-4 mb-3">
         <div class="col">
@@ -27,17 +24,20 @@
                     <h5 class="card-title text-primary mb-1" th:text="${event.title}">Event Name</h5>
                     <div class="d-flex text-muted small mb-3">
                         <span class="me-3">
-                            <i class="bi bi-geo-alt-fill text-danger"></i> <span th:text="${event.location}">Venue</span>
+                            <i class="bi bi-geo-alt-fill text-danger"></i>
+                            <span th:text="${event.location}">Venue</span>
                         </span>
                         <span>
-                            <i class="bi bi-clock-fill text-success"></i> <span th:text="${#temporals.format(event.startDate, 'dd MMM yyyy HH:mm')}">Date</span>
+                            <i class="bi bi-clock-fill text-success"></i>
+                            <span th:text="${#temporals.format(event.startDate, 'dd MMM yyyy HH:mm')}">Date</span>
                         </span>
                     </div>
                     <p class="card-text text-secondary mb-4" th:text="${event.description}">Event details...</p>
 
                     <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                        <span class="badge bg-secondary rounded-pill px-3 py-2">Club ID: <span th:text="${#strings.substring(event.clubId,0,8)}"></span>...</span>
-                        <form th:action="@{/events/{id}/register(id=${event.id})}" method="post" sec:authorize="!hasRole('PLATFORM_ADMIN')">
+                        <span class="badge bg-secondary rounded-pill px-3 py-2">Club ID:
+                            <span th:text="${#strings.substring(event.clubId,0,8)}"></span>...</span>
+                        <form th:action="@{/events/{id}/register(id=${event.id})}" method="post" sec:authorize="isAuthenticated() and !hasRole('PLATFORM_ADMIN')">
                             <button type="submit" class="btn btn-primary rounded-pill px-4">Register</button>
                         </form>
                     </div>
@@ -71,7 +71,6 @@
             </li>
         </ul>
     </nav>
-</div>
 </div>
 
 </body>

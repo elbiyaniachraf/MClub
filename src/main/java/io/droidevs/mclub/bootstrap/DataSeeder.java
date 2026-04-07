@@ -104,8 +104,7 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Database seeding complete!");
         log.info("Test Accounts:");
         log.info("Admin: admin@mclub.com / admin123");
+        log.info("Manager: manager@mclub.com / manager123");
         log.info("Member: member@mclub.com / member123");
     }
 }
-
-

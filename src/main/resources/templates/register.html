@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout.html::head}"></head>
 <body>
-<div th:replace="~{layout.html :: body(content=~{::div.container})}">
+<div th:replace="~{layout.html :: body(~{::div.container})}">
 <div class="container">
     <div class="row justify-content-center mt-5">
         <div class="col-md-6">

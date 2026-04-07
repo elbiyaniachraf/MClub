@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Pending Club Applications</title>
-</head>
-<body>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{::div})}">
 
-<div th:replace="~{layout.html :: body(content=~{::div.container})}">
 <div class="container">
     <div class="mt-4 mb-3">
         <h2 class="display-6"><i class="bi bi-file-earmark-text text-primary"></i> Pending Club Applications</h2>
@@ -39,10 +36,10 @@
                         <td th:text="${#temporals.format(app.createdAt, 'dd MMM yyyy')}">Date</td>
                         <td class="pe-4">
                             <div class="d-flex justify-content-center gap-2">
-                                <form th:action="@{/club-applications/{id}/approve(id=${app.id})}" method="post">
+                                <form th:action="@{/club-applications/{id}/approve(id=${app.id})}" method="post" sec:authorize="hasRole('PLATFORM_ADMIN')">
                                     <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm">Approve</button>
                                 </form>
-                                <form th:action="@{/club-applications/{id}/reject(id=${app.id})}" method="post">
+                                <form th:action="@{/club-applications/{id}/reject(id=${app.id})}" method="post" sec:authorize="hasRole('PLATFORM_ADMIN')">
                                     <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 shadow-sm">Reject</button>
                                 </form>
                             </div>
@@ -59,7 +56,6 @@
         </div>
     </div>
 
-</div>
 </div>
 
 </body>
