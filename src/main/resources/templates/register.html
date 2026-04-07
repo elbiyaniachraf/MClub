@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout.html::head"></head>
+<body>
+<div th:replace="layout.html :: body(content=~{::div.container})">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-success text-white text-center py-4 rounded-top-4">
+                    <h3 class="mb-0">Join MClub</h3>
+                    <p class="mb-0 text-white-50">Create your account to connect with clubs</p>
+                </div>
+                <div class="card-body p-5">
+
+                    <div th:if="${error}" class="alert alert-danger mb-4" th:text="${error}">Registration error</div>
+
+                    <form th:action="@{/register}" th:object="${registerRequest}" method="post">
+
+                        <div class="form-floating mb-3">
+                            <input type="text" id="fullName" th:field="*{fullName}" class="form-control rounded-pill px-4" placeholder="John Doe" required>
+                            <label for="fullName" class="px-4 text-muted">Full Name</label>
+                            <div th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" class="text-danger small mt-1 ms-3"></div>
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <input type="email" id="email" th:field="*{email}" class="form-control rounded-pill px-4" placeholder="name@example.com" required>
+                            <label for="email" class="px-4 text-muted">Email address</label>
+                            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger small mt-1 ms-3"></div>
+                        </div>
+
+                        <div class="form-floating mb-4">
+                            <input type="password" id="password" th:field="*{password}" class="form-control rounded-pill px-4" placeholder="Password" required>
+                            <label for="password" class="px-4 text-muted">Password</label>
+                            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small mt-1 ms-3"></div>
+                        </div>
+
+                        <div class="mb-4 px-3">
+                            <label class="form-label text-muted mb-2">Account Type</label>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleMember" value="MEMBER" checked>
+                                    <label class="form-check-label" for="roleMember">Member</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="role" id="roleAdmin" value="ADMIN">
+                                    <label class="form-check-label" for="roleAdmin">Administrator</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg rounded-pill shadow-sm" type="submit">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light text-center py-3 rounded-bottom-4 border-0">
+                    <span class="text-muted">Already have an account?</span>
+                    <a th:href="@{/login}" class="text-success text-decoration-none fw-bold ms-1">Log in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

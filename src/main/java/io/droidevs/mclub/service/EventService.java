@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
 @Service
 @RequiredArgsConstructor
 public class EventService {
@@ -28,5 +29,9 @@ public class EventService {
     }
     public List<EventDto> getEventsByClub(UUID clubId) {
         return eventRepository.findByClubId(clubId).stream().map(eventMapper::toDto).collect(Collectors.toList());
+    }
+
+    public Page<EventDto> getAllEvents(org.springframework.data.domain.Pageable pageable) {
+        return eventRepository.findAll(pageable).map(eventMapper::toDto);
     }
 }

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title>Clubs</title>
+</head>
+<body>
+
+<div th:replace="layout.html :: body(content=~{::div.container})">
+    <div class="row align-items-center mt-4 mb-3">
+        <div class="col">
+            <h2 class="display-6"><i class="bi bi-people-fill text-primary"></i> Clubs Collection</h2>
+        </div>
+        <div class="col-auto" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+            <!-- Button could trigger modal or redirect to Create Page -->
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createClubModal">Create New Club</button>
+        </div>
+    </div>
+
+    <!-- Alert Messages (optional backend flash attributes) -->
+    <div th:if="${message}" class="alert alert-success mt-2" th:text="${message}"></div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="col" th:each="club : ${clubsPage.content}">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-primary text-white p-3">
+                    <h5 class="card-title mb-0 text-truncate" th:text="${club.name}">Club Name</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text text-muted" th:text="${club.description}">Club description...</p>
+                </div>
+                <div class="card-footer bg-white border-0 d-flex justify-content-between p-3">
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3">View Details</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12" th:if="${clubsPage.empty}">
+            <div class="alert alert-info border-0 rounded-3 shadow-sm" role="alert">
+                <h4 class="alert-heading">No clubs yet!</h4>
+                <p>There are no clubs created at this moment. Please check back later.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Clubs Pagination" class="mt-4" th:if="${clubsPage.totalPages > 1}">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" th:classappend="${clubsPage.first} ? 'disabled'">
+                <a class="page-link" th:href="@{/clubs(page=${clubsPage.number - 1})}">Previous</a>
+            </li>
+
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, clubsPage.totalPages - 1)}"
+                th:classappend="${clubsPage.number == i} ? 'active'">
+                <a class="page-link" th:href="@{/clubs(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${clubsPage.last} ? 'disabled'">
+                <a class="page-link" th:href="@{/clubs(page=${clubsPage.number + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+</body>
+</html>
+

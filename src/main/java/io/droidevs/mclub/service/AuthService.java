@@ -24,7 +24,7 @@ public class AuthService {
     }
     public void registerUser(RegisterRequest req) {
         if(userRepository.findByEmail(req.getEmail()).isPresent()) throw new RuntimeException("Email already exists");
-        Role r = req.getRole() != null && req.getRole().equalsIgnoreCase("ADMIN") ? Role.ROLE_ADMIN : Role.ROLE_MEMBER;
+        Role r = req.getRole() != null && req.getRole().equalsIgnoreCase("ADMIN") ? Role.ADMIN : Role.MEMBER;
         User user = User.builder().email(req.getEmail()).password(passwordEncoder.encode(req.getPassword()))
                 .fullName(req.getFullName()).role(r).build();
         userRepository.save(user);

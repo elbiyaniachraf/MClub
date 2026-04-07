@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout.html::head"></head>
+<!-- actually, we can directly create views that inject into basic body -->
+<body>
+<div th:replace="layout.html :: body(content=~{::div.container})">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4 class="mb-0">MClub Login</h4>
+                    </div>
+                    <div class="card-body">
+
+                        <div th:if="${param.logout}" class="alert alert-success">
+                            You have been logged out.
+                        </div>
+                        <div th:if="${param.registered}" class="alert alert-success">
+                            Registration successful. Please login.
+                        </div>
+                        <div th:if="${error}" class="alert alert-danger" th:text="${error}">
+                            Invalid credentials.
+                        </div>
+
+                        <form th:action="@{/login}" th:object="${loginRequest}" method="post">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email address</label>
+                                <input type="email" id="email" th:field="*{email}" class="form-control" required autofocus>
+                                <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger small"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" th:field="*{password}" class="form-control" required>
+                                <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="text-danger small"></div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" type="submit">Log in</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <small>Don't have an account? <a th:href="@{/register}">Register here</a></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

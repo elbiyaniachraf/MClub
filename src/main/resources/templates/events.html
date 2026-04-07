@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Events</title>
+</head>
+<body>
+
+<div th:replace="layout.html :: body(content=~{::div.container})">
+    <div class="row align-items-center mt-4 mb-3">
+        <div class="col">
+            <h2 class="display-6 text-warning"><i class="bi bi-calendar-event"></i> Upcoming Events</h2>
+        </div>
+        <div class="col-auto" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
+            <button class="btn btn-warning shadow-sm">Schedule Event</button>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${message}" class="alert alert-success mt-2 border-0 shadow-sm" th:text="${message}"></div>
+
+    <div class="row row-cols-1 row-cols-lg-2 g-4 mt-2">
+        <div class="col" th:each="event : ${eventsPage.content}">
+            <div class="card h-100 shadow-sm border-0 bg-light rounded-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary mb-1" th:text="${event.title}">Event Name</h5>
+                    <div class="d-flex text-muted small mb-3">
+                        <span class="me-3">
+                            <i class="bi bi-geo-alt-fill text-danger"></i> <span th:text="${event.location}">Venue</span>
+                        </span>
+                        <span>
+                            <i class="bi bi-clock-fill text-success"></i> <span th:text="${#temporals.format(event.startDate, 'dd MMM yyyy HH:mm')}">Date</span>
+                        </span>
+                    </div>
+                    <p class="card-text text-secondary mb-4" th:text="${event.description}">Event details...</p>
+
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
+                        <span class="badge bg-secondary rounded-pill px-3 py-2">Club ID: <span th:text="${#strings.substring(event.clubId,0,8)}"></span>...</span>
+                        <button class="btn btn-primary rounded-pill px-4">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="col-12" th:if="${eventsPage.empty}">
+            <div class="alert alert-secondary border-0 p-4 text-center rounded-3 shadow-sm">
+                <h4 class="alert-heading text-dark">No Events Scheduled</h4>
+                <p class="mb-0">Please check back later or contact your club administrators.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Events Pagination" class="mt-5" th:if="${eventsPage.totalPages > 1}">
+        <ul class="pagination pagination-lg justify-content-center">
+            <li class="page-item" th:classappend="${eventsPage.first} ? 'disabled'">
+                <a class="page-link rounded-start-pill" th:href="@{/events(page=${eventsPage.number - 1})}">Prev</a>
+            </li>
+
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, eventsPage.totalPages - 1)}"
+                th:classappend="${eventsPage.number == i} ? 'active'">
+                <a class="page-link" th:href="@{/events(page=${i})}" th:text="${i + 1}">1</a>
+            </li>
+
+            <li class="page-item" th:classappend="${eventsPage.last} ? 'disabled'">
+                <a class="page-link rounded-end-pill" th:href="@{/events(page=${eventsPage.number + 1})}">Next</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+</body>
+</html>
+
