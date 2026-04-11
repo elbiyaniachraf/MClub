@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{this :: content})}">
+
+<div class="container mt-4" th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-inbox text-primary me-2"></i>Membership Applications</h2>
+            <div class="text-muted">
+                <span th:text="${club.name}">Club</span>
+                <span class="mx-2">•</span>
+                <span class="small">Pending requests</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/club-admin/clubs/{clubId}/members(clubId=${club.id})}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-people"></i> Members
+            </a>
+            <a th:href="@{/club-admin/clubs}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Student</th>
+                        <th>Email</th>
+                        <th>Requested at</th>
+                        <th class="pe-4 text-end">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="app : ${applications}">
+                        <td class="ps-4 fw-semibold" th:text="${app.user.fullName}">Full name</td>
+                        <td class="text-muted" th:text="${app.user.email}">email</td>
+                        <td class="text-muted" th:text="${#temporals.format(app.joinedAt, 'dd MMM yyyy HH:mm')}">date</td>
+                        <td class="pe-4 text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <form th:action="@{/club-admin/memberships/{id}/status(id=${app.id})}" method="post">
+                                    <input type="hidden" name="status" value="APPROVED"/>
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                </form>
+
+                                <form th:action="@{/club-admin/memberships/{id}/status(id=${app.id})}" method="post">
+                                    <input type="hidden" name="status" value="REJECTED"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject this application?');">
+                                        <i class="bi bi-x-lg"></i> Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(applications)}">
+                        <td colspan="4" class="text-center text-muted py-5">
+                            No pending applications.
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        Tip: after approving, the student will appear in the Members page.
+    </div>
+</div>
+
+</body>
+</html>
+

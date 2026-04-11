@@ -6,8 +6,16 @@
 <div class="container mt-4" th:fragment="content">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-people-fill text-primary"></i> <span th:text="${club.name}"></span> Members</h2>
-        <a th:href="@{/club-admin/clubs}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Managed Clubs</a>
+        <div>
+            <h2><i class="bi bi-people-fill text-primary"></i> <span th:text="${club.name}"></span> Members</h2>
+            <div class="text-muted small">Approved members only. Use “Applications” to approve or reject new join requests.</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/club-admin/clubs/{clubId}/memberships(clubId=${club.id})}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-inbox"></i> Applications
+            </a>
+            <a th:href="@{/club-admin/clubs}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to Managed Clubs</a>
+        </div>
     </div>
 
     <div th:if="${message}" class="alert alert-success mt-2" th:text="${message}"></div>
@@ -31,28 +39,12 @@
                             <td class="ps-4 fw-bold text-dark" th:text="${member.user.fullName}"></td>
                             <td><span class="badge bg-secondary rounded-pill" th:text="${member.role}"></span></td>
                             <td>
-                                <span class="badge status-badge"
-                                      th:classappend="${member.status == 'PENDING'} ? ' status-pending' : (${member.status == 'APPROVED'} ? ' status-approved' : ' status-rejected')"
-                                      th:text="${member.status}"></span>
+                                <span class="badge bg-success" th:text="${member.status}"></span>
                             </td>
                             <td class="text-muted" th:text="${#temporals.format(member.joinedAt, 'dd MMM yyyy HH:mm')}"></td>
                             <td class="pe-4 text-end">
-
-                                <!-- Actions hidden for ADMIN members (avoid demoting/kicking the club admin in UI) -->
+                                <!-- Kick only (manage-members only lists APPROVED memberships) -->
                                 <div class="d-flex gap-2 justify-content-end" th:if="${member.role.name() != 'ADMIN'}">
-
-                                    <!-- Approve / Reject (only if PENDING) -->
-                                    <form th:if="${member.status == 'PENDING'}" th:action="@{/club-admin/memberships/{id}/status(id=${member.id})}" method="post">
-                                        <input type="hidden" name="status" value="APPROVED"/>
-                                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> Approve</button>
-                                    </form>
-
-                                    <form th:if="${member.status == 'PENDING'}" th:action="@{/club-admin/memberships/{id}/status(id=${member.id})}" method="post">
-                                        <input type="hidden" name="status" value="REJECTED"/>
-                                        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-x-lg"></i> Reject</button>
-                                    </form>
-
-                                    <!-- Kick -->
                                     <form th:action="@{/club-admin/memberships/{id}/kick(id=${member.id})}" method="post">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to kick this member?');"><i class="bi bi-x-octagon"></i> Kick Out</button>
                                     </form>
@@ -63,7 +55,10 @@
                 </table>
                 <div th:if="${#lists.isEmpty(members)}" class="text-center p-5 text-muted">
                     <h5><i class="bi bi-emoji-neutral text-secondary" style="font-size: 2rem;"></i></h5>
-                    <p>No members currently.</p>
+                    <p>No approved members yet.</p>
+                    <a th:href="@{/club-admin/clubs/{clubId}/memberships(clubId=${club.id})}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-inbox"></i> View Applications
+                    </a>
                 </div>
             </div>
         </div>

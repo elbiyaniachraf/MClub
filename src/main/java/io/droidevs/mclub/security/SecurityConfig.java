@@ -30,6 +30,8 @@ public class SecurityConfig {
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/clubs", "/events", "/api/auth/**", "/login", "/register", "/css/**", "/js/**", "/error", "/favicon.ico").permitAll()
+                // Students can apply to create a club; admin-only actions are protected at controller level with @PreAuthorize.
+                .requestMatchers("/club-applications/apply", "/club-applications/apply-club", "/club-applications/submit").authenticated()
                 .requestMatchers("/club-applications/**").hasRole("PLATFORM_ADMIN")
                 // club-admin pages are restricted by membership (club-scoped). Require login here; deeper checks happen in controller.
                 .requestMatchers("/club-admin/**").authenticated()

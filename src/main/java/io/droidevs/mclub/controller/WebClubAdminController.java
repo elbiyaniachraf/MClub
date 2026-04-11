@@ -3,6 +3,7 @@ package io.droidevs.mclub.controller;
 import io.droidevs.mclub.domain.Club;
 import io.droidevs.mclub.domain.ClubRole;
 import io.droidevs.mclub.domain.Membership;
+import io.droidevs.mclub.domain.MembershipStatus;
 import io.droidevs.mclub.domain.User;
 import io.droidevs.mclub.repository.ClubRepository;
 import io.droidevs.mclub.repository.MembershipRepository;
@@ -47,18 +48,31 @@ public class WebClubAdminController {
         return "my-managed-clubs";
     }
 
-    @GetMapping("/clubs/{clubId}/members")
-    public String manageMembers(@PathVariable UUID clubId, Model model, Authentication auth) {
-        // Find club
+    @GetMapping("/clubs/{clubId}/memberships")
+    public String membershipApplications(@PathVariable UUID clubId, Model model, Authentication auth) {
         Club club = clubRepository.findById(clubId).orElseThrow();
 
-        // Ensure current user can manage this club
         User user = userRepository.findByEmail(auth.getName()).orElseThrow();
         if (!canManageClub(clubId, user.getId())) {
             return "redirect:/dashboard";
         }
 
-        List<Membership> members = membershipRepository.findByClubId(clubId);
+        List<Membership> pending = membershipRepository.findByClubIdAndStatus(clubId, MembershipStatus.PENDING);
+        model.addAttribute("club", club);
+        model.addAttribute("applications", pending);
+        return "membership-applications";
+    }
+
+    @GetMapping("/clubs/{clubId}/members")
+    public String manageMembers(@PathVariable UUID clubId, Model model, Authentication auth) {
+        Club club = clubRepository.findById(clubId).orElseThrow();
+
+        User user = userRepository.findByEmail(auth.getName()).orElseThrow();
+        if (!canManageClub(clubId, user.getId())) {
+            return "redirect:/dashboard";
+        }
+
+        List<Membership> members = membershipRepository.findByClubIdAndStatus(clubId, MembershipStatus.APPROVED);
 
         model.addAttribute("club", club);
         model.addAttribute("members", members);
@@ -83,7 +97,7 @@ public class WebClubAdminController {
         membership.setStatus(io.droidevs.mclub.domain.MembershipStatus.valueOf(status.toUpperCase()));
         membershipRepository.save(membership);
         redirectAttributes.addFlashAttribute("message", "Member status updated to " + status + ".");
-        return "redirect:/club-admin/clubs/" + clubId + "/members";
+        return "redirect:/club-admin/clubs/" + clubId + "/memberships";
     }
 
     @PostMapping("/memberships/{membershipId}/kick")

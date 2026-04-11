@@ -17,9 +17,14 @@
                     <p class="card-text text-muted" th:text="${club.description}"></p>
 
                     <div class="d-flex gap-2 flex-wrap mt-3">
-                        <a th:href="@{/club-admin/clubs/{id}/members(id=${club.id})}"
+                        <a th:href="@{/club-admin/clubs/{id}/memberships(id=${club.id})}"
                            class="btn btn-outline-primary btn-sm rounded-pill">
-                            <i class="bi bi-people"></i> Manage Members
+                            <i class="bi bi-inbox"></i> Applications
+                        </a>
+
+                        <a th:href="@{/club-admin/clubs/{id}/members(id=${club.id})}"
+                           class="btn btn-outline-secondary btn-sm rounded-pill">
+                            <i class="bi bi-people"></i> Members
                         </a>
 
                         <a th:href="@{/club-admin/clubs/{id}/attendance(id=${club.id})}"

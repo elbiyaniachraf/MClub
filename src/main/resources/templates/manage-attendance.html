@@ -181,7 +181,7 @@
     </div>
 </div>
 
-<script src="/js/qrcode.min.js"></script>
+<script src="/js/qrcode.min.js" onload="window.__qrcodeLoaded=true"></script>
 <script>
     function copyToken() {
         const el = document.getElementById('qrToken');
@@ -199,19 +199,41 @@
         return v;
     }
 
-    function renderQr(targetId, size) {
+    function ensureQrLoaded() {
+        if (window.__qrcodeLoaded && typeof window.QRCode !== 'undefined') return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            // If the script tag above didn't load for any reason, try loading it again.
+            const existing = document.querySelector('script[data-qrcode-dynamic]');
+            if (existing) {
+                existing.addEventListener('load', () => resolve(), { once: true });
+                existing.addEventListener('error', () => reject(new Error('Failed to load QR library')), { once: true });
+                return;
+            }
+
+            const s = document.createElement('script');
+            s.src = '/js/qrcode.min.js';
+            s.async = true;
+            s.dataset.qrcodeDynamic = '1';
+            s.onload = () => { window.__qrcodeLoaded = true; resolve(); };
+            s.onerror = () => reject(new Error('Failed to load QR library'));
+            document.head.appendChild(s);
+        });
+    }
+
+    async function renderQr(targetId, size) {
         const target = document.getElementById(targetId);
         const token = getTokenValue();
         if (!target || !token) return;
 
-        if (typeof QRCode === 'undefined') {
-            target.innerHTML = '<div class="text-danger small">QR library not loaded.</div>';
+        try {
+            await ensureQrLoaded();
+        } catch (e) {
+            target.innerHTML = '<div class="text-danger small">QR library failed to load.</div>';
             return;
         }
 
         target.innerHTML = '';
-        // eslint-disable-next-line no-undef
-        new QRCode(target, { text: token, width: size, height: size, correctLevel: QRCode.CorrectLevel.H });
+        new window.QRCode(target, { text: token, width: size, height: size, correctLevel: window.QRCode.CorrectLevel.H });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -222,16 +244,19 @@
         const modalEl = document.getElementById('qrFullscreenModal');
         if (!modalEl) return;
 
-        // Prefer the global bootstrap (as in your events.html), but also support modules/bundlers.
+        // Bootstrap bundle should set window.bootstrap – but if CDN is blocked, fail gracefully.
         const bs = window.bootstrap;
         if (!bs || !bs.Modal) {
-            alert('Bootstrap modal JS not loaded.');
+            // Fallback: just render the large QR in-place in the page (still usable)
+            renderQr('qrCanvasLarge', 420);
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.removeAttribute('aria-hidden');
+            document.body.classList.add('modal-open');
             return;
         }
 
         const modal = bs.Modal.getOrCreateInstance(modalEl);
-
-        // Render after the modal is visible, so qrcodejs can measure correctly.
         modalEl.addEventListener('shown.bs.modal', () => {
             renderQr('qrCanvasLarge', 420);
         }, { once: true });
