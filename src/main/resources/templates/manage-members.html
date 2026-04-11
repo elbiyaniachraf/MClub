@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout :: head}"></head>
 <body th:replace="~{layout :: body(content=~{this :: content})}" class="bg-light">
 
@@ -41,13 +41,18 @@
                                 <!-- Actions hidden for ADMIN members (avoid demoting/kicking the club admin in UI) -->
                                 <div class="d-flex gap-2 justify-content-end" th:if="${member.role.name() != 'ADMIN'}">
 
-                                    <!-- Action to Approve (only if PENDING) -->
+                                    <!-- Approve / Reject (only if PENDING) -->
                                     <form th:if="${member.status == 'PENDING'}" th:action="@{/club-admin/memberships/{id}/status(id=${member.id})}" method="post">
                                         <input type="hidden" name="status" value="APPROVED"/>
-                                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> Accept</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> Approve</button>
                                     </form>
 
-                                    <!-- Action to Kick -->
+                                    <form th:if="${member.status == 'PENDING'}" th:action="@{/club-admin/memberships/{id}/status(id=${member.id})}" method="post">
+                                        <input type="hidden" name="status" value="REJECTED"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-x-lg"></i> Reject</button>
+                                    </form>
+
+                                    <!-- Kick -->
                                     <form th:action="@{/club-admin/memberships/{id}/kick(id=${member.id})}" method="post">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to kick this member?');"><i class="bi bi-x-octagon"></i> Kick Out</button>
                                     </form>

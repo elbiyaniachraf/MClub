@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{this :: content})}">
+
+<div class="container mt-4" th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-qr-code me-2"></i>Manage Attendance</h2>
+            <div class="text-muted">
+                <span th:text="${club.name}">Club</span>
+                <span class="mx-2">•</span>
+                <span th:text="${event.title}">Event</span>
+            </div>
+        </div>
+        <a th:href="@{/club-admin/clubs}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Window config + QR -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="card-title">Check-in Window</h5>
+                    <p class="text-muted small mb-3">
+                        Configure when students are allowed to check in.
+                        Time is relative to the event start time.
+                    </p>
+
+                    <div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+                    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                    <form th:action="@{/club-admin/events/{eventId}/attendance/window(eventId=${event.id})}" method="post" class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="opensBefore">Opens قبل البداية (minutes)</label>
+                            <input class="form-control" id="opensBefore" name="opensBeforeStartMinutes" type="number" min="0" max="1440" value="15" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="closesAfter">Closes بعد البداية (minutes)</label>
+                            <input class="form-control" id="closesAfter" name="closesAfterStartMinutes" type="number" min="1" max="1440" value="60" required>
+                        </div>
+                        <div class="col-12 d-grid">
+                            <button class="btn btn-success">
+                                <i class="bi bi-arrow-repeat me-1"></i>
+                                Open / Rotate QR Code
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <form th:action="@{/club-admin/events/{eventId}/attendance/window/close(eventId=${event.id})}" method="post" class="d-grid">
+                        <button class="btn btn-outline-danger">
+                            <i class="bi bi-door-closed me-1"></i>
+                            Close Check-in Window
+                        </button>
+                    </form>
+
+                    <div class="mt-4">
+                        <h6 class="mb-2">Current QR token</h6>
+                        <label class="form-label small" for="qrToken">Token (copy into your QR generator)</label>
+                        <div class="input-group">
+                            <input class="form-control font-monospace" id="qrToken" th:value="${qrToken}" readonly>
+                            <button class="btn btn-outline-secondary" type="button" onclick="copyToken()"><i class="bi bi-clipboard"></i></button>
+                        </div>
+                        <div class="form-text">Embed this token in a QR code. Rotating it invalidates previous QRs instantly.</div>
+
+                        <div class="row g-3 mt-2" th:if="${qrToken != null}">
+                            <div class="col-auto">
+                                <div class="border rounded-3 p-2 bg-white" style="width: 180px; height: 180px; display:flex; align-items:center; justify-content:center;">
+                                    <div id="qrCanvas"></div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="alert alert-light border small mb-2">
+                                    <div class="fw-semibold mb-1">How students check in</div>
+                                    <div>Students scan this QR during the allowed time window to record attendance.</div>
+                                    <div class="text-muted mt-1">Tip: Rotate the QR token if you suspect it leaked.</div>
+                                </div>
+
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="button" class="btn btn-outline-dark btn-sm" onclick="openQrFullscreen()">
+                                        <i class="bi bi-arrows-fullscreen me-1"></i> Full screen
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="printQr()">
+                                        <i class="bi bi-printer me-1"></i> Print QR
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3" th:if="${qrToken == null}">
+                            Generate/rotate a token to start check-in.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance list -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Checked-in Students</h5>
+                        <span class="badge bg-primary" th:text="${attendanceCount} + ' حاضر'">0</span>
+                    </div>
+
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Email</th>
+                                <th>Checked in at</th>
+                                <th>Method</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="a : ${attendance}">
+                                <td class="fw-semibold" th:text="${a.userEmail}">email</td>
+                                <td class="text-muted" th:text="${#temporals.format(a.checkedInAt, 'dd MMM yyyy HH:mm')}">time</td>
+                                <td><span class="badge bg-secondary" th:text="${a.method}">method</span></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(attendance)}">
+                                <td colspan="3" class="text-center text-muted py-4">No one checked in yet.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="mb-2">Manual check-in</h6>
+                    <p class="text-muted small">If you scan a student’s ID/QR externally, paste their userId here to mark attendance.</p>
+
+                    <form th:action="@{/club-admin/events/{eventId}/attendance/check-in(eventId=${event.id})}" method="post" class="row g-2">
+                        <div class="col-md-8">
+                            <label class="form-label" for="studentId">Student UUID</label>
+                            <input class="form-control font-monospace" id="studentId" name="studentId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" required>
+                        </div>
+                        <div class="col-md-4 d-grid align-items-end">
+                            <button class="btn btn-outline-primary mt-2 mt-md-0"><i class="bi bi-person-check me-1"></i>Check in</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Full-screen QR modal -->
+<div class="modal fade" id="qrFullscreenModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-qr-code me-2"></i>Event Check-in QR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex flex-column align-items-center justify-content-center gap-3">
+                <div class="text-center">
+                    <div class="h4 mb-1" th:text="${event.title}">Event Title</div>
+                    <div class="text-muted" th:text="${club.name}">Club Name</div>
+                </div>
+
+                <div class="bg-white p-3 rounded-4 shadow-sm" style="max-width: min(90vw, 520px);">
+                    <div id="qrCanvasLarge"></div>
+                </div>
+
+                <div class="text-muted small text-center" style="max-width: 720px;">
+                    Students: open the app, scan the QR, and check in. Check-in only works during the configured time window.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="printQr()"><i class="bi bi-printer me-1"></i> Print QR</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/qrcode.min.js"></script>
+<script>
+    function copyToken() {
+        const el = document.getElementById('qrToken');
+        if (!el || !el.value) return;
+        el.select();
+        document.execCommand('copy');
+    }
+
+    function renderQr(targetId, size) {
+        const tokenEl = document.getElementById('qrToken');
+        const target = document.getElementById(targetId);
+        if (!tokenEl || !target) return;
+        const token = tokenEl.value;
+        if (!token) return;
+
+        // qrcode.min.js provides a global QRCode constructor
+        if (typeof QRCode !== 'undefined') {
+            target.innerHTML = '';
+            // eslint-disable-next-line no-undef
+            new QRCode(target, { text: token, width: size, height: size, correctLevel: QRCode.CorrectLevel.H });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderQr('qrCanvas', 160);
+    });
+
+    function openQrFullscreen() {
+        renderQr('qrCanvasLarge', 420);
+        const modal = new bootstrap.Modal(document.getElementById('qrFullscreenModal'));
+        modal.show();
+    }
+
+    function printQr() {
+        const tokenEl = document.getElementById('qrToken');
+        if (!tokenEl || !tokenEl.value) return;
+        const token = tokenEl.value;
+
+        const eventTitle = document.querySelector('#qrFullscreenModal .h4')?.textContent || document.title;
+        const clubName = document.querySelector('#qrFullscreenModal .text-muted')?.textContent || '';
+
+        const w = window.open('', '_blank', 'width=720,height=900');
+        if (!w) return;
+
+        w.document.open();
+        w.document.write(`
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Print QR</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 24px; }
+    .wrap { display:flex; flex-direction:column; align-items:center; gap: 12px; }
+    .title { font-size: 22px; font-weight: 700; text-align:center; }
+    .sub { color:#666; text-align:center; }
+    .qr { padding: 16px; background: #fff; border: 1px solid #ddd; border-radius: 12px; }
+    .hint { margin-top: 8px; color:#555; text-align:center; }
+    @media print { body { padding: 0; } .hint { font-size: 12px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">${eventTitle}</div>
+    <div class="sub">${clubName}</div>
+    <div class="qr" id="printQr"></div>
+    <div class="hint">Scan to check in</div>
+  </div>
+  <script src="/js/qrcode.min.js"></script>
+  <script>
+    if (typeof QRCode !== 'undefined') {
+      new QRCode(document.getElementById('printQr'), { text: ${JSON.stringify(token)}, width: 420, height: 420, correctLevel: QRCode.CorrectLevel.H });
+      setTimeout(() => window.print(), 250);
+    } else {
+      document.getElementById('printQr').textContent = 'QR library not loaded.';
+    }
+  </script>
+</body>
+</html>`);
+        w.document.close();
+    }
+</script>
+
+</body>
+</html>
+

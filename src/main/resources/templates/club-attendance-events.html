@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head}"></head>
+<body th:replace="~{layout :: body(content=~{this :: content})}">
+
+<div class="container mt-4" th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-calendar-check me-2"></i>Attendance</h2>
+            <div class="text-muted">Choose an event to manage check-in.</div>
+        </div>
+        <a th:href="@{/club-admin/clubs}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body">
+            <h5 class="card-title" th:text="${club.name}">Club Name</h5>
+            <p class="text-muted mb-4" th:text="${club.description}">Club description</p>
+
+            <div class="list-group">
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                   th:each="event : ${events}"
+                   th:href="@{/club-admin/events/{eventId}/attendance(eventId=${event.id})}">
+                    <div>
+                        <div class="fw-semibold" th:text="${event.title}">Event</div>
+                        <div class="text-muted small">
+                            <i class="bi bi-clock"></i>
+                            <span th:text="${#temporals.format(event.startDate, 'dd MMM yyyy HH:mm')}"></span>
+                            <span class="mx-1">→</span>
+                            <span th:text="${#temporals.format(event.endDate, 'dd MMM yyyy HH:mm')}"></span>
+                        </div>
+                    </div>
+                    <span class="badge bg-success rounded-pill">Manage</span>
+                </a>
+
+                <div class="text-center text-muted py-4" th:if="${#lists.isEmpty(events)}">
+                    No events found for this club.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
+

@@ -114,7 +114,7 @@
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="checkInEventId" />
-                    <label class="form-label">Paste token from the event QR</label>
+                    <label class="form-label" for="checkInToken">Paste token from the event QR</label>
                     <input class="form-control" id="checkInToken" placeholder="QR token" />
                     <div class="form-text">Check-in works only inside the allowed time window.</div>
                     <div class="alert alert-danger mt-3 d-none" id="checkInError"></div>
@@ -139,7 +139,7 @@
                 <div class="modal-body">
                     <input type="hidden" id="rateEventId" />
 
-                    <label class="form-label">Rating (1-5)</label>
+                    <label class="form-label" for="rateValue">Rating (1-5)</label>
                     <select class="form-select" id="rateValue">
                         <option value="5">5 - Excellent</option>
                         <option value="4">4 - Good</option>
@@ -148,7 +148,7 @@
                         <option value="1">1 - Terrible</option>
                     </select>
 
-                    <label class="form-label mt-3">Comment (optional)</label>
+                    <label class="form-label mt-3" for="rateComment">Comment (optional)</label>
                     <textarea class="form-control" id="rateComment" rows="3" placeholder="What did you like / dislike?"></textarea>
 
                     <div class="form-text mt-2">
