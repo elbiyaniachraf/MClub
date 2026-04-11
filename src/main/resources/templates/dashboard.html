@@ -7,9 +7,8 @@
     <div class="row mt-4">
         <div class="col-12 text-center mb-4">
             <h1 class="display-5">Welcome back, <span th:text="${username}">User</span>!</h1>
-            <p class="lead text-muted" sec:authorize="hasRole('PLATFORM_ADMIN')">Platform Administrator Dashboard: Manage all applications, clubs, and events.</p>
-            <p class="lead text-muted" sec:authorize="hasRole('CLUB_ADMIN')">Club Administrator Dashboard: Manage your clubs, join events, and stay active.</p>
-            <p class="lead text-muted" sec:authorize="hasRole('MEMBER')">Member Dashboard: Join clubs, explore events, and stay active.</p>
+            <p class="lead text-muted" sec:authorize="hasRole('PLATFORM_ADMIN')">Platform Admin Dashboard: review club applications and oversee the platform.</p>
+            <p class="lead text-muted" sec:authorize="hasRole('STUDENT')">Student Dashboard: explore clubs & events, check in with QR at events, and rate events after attending.</p>
         </div>
     </div>
 
@@ -27,7 +26,7 @@
                                 <div class="fw-bold" th:text="${club.name}">Club Name</div>
                                 <span class="text-muted small" th:text="${club.description}">Description</span>
                             </div>
-                            <span class="badge bg-primary rounded-pill">View</span>
+                            <a class="badge bg-primary rounded-pill text-decoration-none" th:href="@{/clubs/{id}(id=${club.id})}">View</a>
                         </li>
                         <li class="list-group-item text-center text-muted" th:if="${#lists.isEmpty(recentClubs)}">
                             No clubs found.

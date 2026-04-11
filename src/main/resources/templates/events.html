@@ -7,9 +7,7 @@
     <div class="row align-items-center mt-4 mb-3">
         <div class="col">
             <h2 class="display-6 text-warning"><i class="bi bi-calendar-event"></i> Upcoming Events</h2>
-        </div>
-        <div class="col-auto" th:if="${#authorization.expression('hasAnyRole(''PLATFORM_ADMIN'', ''CLUB_ADMIN'')')}">
-            <button class="btn btn-warning shadow-sm">Schedule Event</button>
+            <p class="text-muted mb-0">Register, check in with QR at the event, then rate after it ends.</p>
         </div>
     </div>
 
@@ -22,24 +20,58 @@
             <div class="card h-100 shadow-sm border-0 bg-light rounded-4">
                 <div class="card-body">
                     <h5 class="card-title text-primary mb-1" th:text="${event.title}">Event Name</h5>
-                    <div class="d-flex text-muted small mb-3">
+
+                    <div class="d-flex flex-wrap text-muted small mb-3">
                         <span class="me-3">
                             <i class="bi bi-geo-alt-fill text-danger"></i>
                             <span th:text="${event.location}">Venue</span>
                         </span>
-                        <span>
+                        <span class="me-3">
                             <i class="bi bi-clock-fill text-success"></i>
                             <span th:text="${#temporals.format(event.startDate, 'dd MMM yyyy HH:mm')}">Date</span>
                         </span>
+                        <span>
+                            <i class="bi bi-hourglass-split"></i>
+                            <span th:text="${#temporals.format(event.endDate, 'dd MMM yyyy HH:mm')}">End</span>
+                        </span>
                     </div>
-                    <p class="card-text text-secondary mb-4" th:text="${event.description}">Event details...</p>
 
-                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                        <span class="badge bg-secondary rounded-pill px-3 py-2">Club ID:
-                            <span th:text="${#strings.substring(event.clubId,0,8)}"></span>...</span>
-                        <form th:action="@{/events/{id}/register(id=${event.id})}" method="post" sec:authorize="isAuthenticated() and !hasRole('PLATFORM_ADMIN')">
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">Register</button>
-                        </form>
+                    <p class="card-text text-secondary mb-3" th:text="${event.description}">Event details...</p>
+
+                    <div class="d-flex justify-content-between align-items-center border-top pt-3 flex-wrap gap-2">
+                        <span class="badge bg-secondary rounded-pill px-3 py-2">
+                            Club: <span th:text="${#strings.substring(event.clubId,0,8)}"></span>...
+                        </span>
+
+                        <div class="d-flex gap-2">
+                            <form th:action="@{/events/{id}/register(id=${event.id})}" method="post" sec:authorize="hasRole('STUDENT')">
+                                <button type="submit" class="btn btn-primary rounded-pill px-4">Register</button>
+                            </form>
+
+                            <!-- Student check-in: paste token from QR scanner app / camera scanner output -->
+                            <button type="button"
+                                    class="btn btn-outline-success rounded-pill"
+                                    sec:authorize="hasRole('STUDENT')"
+                                    th:attr="data-event-id=${event.id}"
+                                    onclick="openCheckInModal(this)">
+                                <i class="bi bi-qr-code-scan me-1"></i>Check-in
+                            </button>
+
+                            <!-- Student rating -->
+                            <button type="button"
+                                    class="btn btn-outline-warning rounded-pill"
+                                    sec:authorize="hasRole('STUDENT')"
+                                    th:attr="data-event-id=${event.id}"
+                                    onclick="openRateModal(this)">
+                                <i class="bi bi-star-fill me-1"></i>Rate
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rating summary (loaded client-side for nicer UX) -->
+                    <div class="mt-3 small text-muted" th:attr="data-summary-for=${event.id}">
+                        <span class="me-2"><i class="bi bi-star"></i> <span data-avg>—</span></span>
+                        <span><i class="bi bi-people"></i> <span data-count>—</span> ratings</span>
                     </div>
                 </div>
             </div>
@@ -71,7 +103,180 @@
             </li>
         </ul>
     </nav>
+
+    <!-- Check-in Modal -->
+    <div class="modal fade" id="checkInModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-qr-code-scan me-2"></i>Event Check-in</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="checkInEventId" />
+                    <label class="form-label">Paste token from the event QR</label>
+                    <input class="form-control" id="checkInToken" placeholder="QR token" />
+                    <div class="form-text">Check-in works only inside the allowed time window.</div>
+                    <div class="alert alert-danger mt-3 d-none" id="checkInError"></div>
+                    <div class="alert alert-success mt-3 d-none" id="checkInSuccess"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="submitCheckIn()">Check in</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rate Modal -->
+    <div class="modal fade" id="rateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-star-fill me-2"></i>Rate Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="rateEventId" />
+
+                    <label class="form-label">Rating (1-5)</label>
+                    <select class="form-select" id="rateValue">
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Okay</option>
+                        <option value="2">2 - Bad</option>
+                        <option value="1">1 - Terrible</option>
+                    </select>
+
+                    <label class="form-label mt-3">Comment (optional)</label>
+                    <textarea class="form-control" id="rateComment" rows="3" placeholder="What did you like / dislike?"></textarea>
+
+                    <div class="form-text mt-2">
+                        You can rate only if you registered, checked in (attended), and the event has ended.
+                    </div>
+
+                    <div class="alert alert-danger mt-3 d-none" id="rateError"></div>
+                    <div class="alert alert-success mt-3 d-none" id="rateSuccess"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="submitRating()">Submit rating</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+    function openCheckInModal(btn) {
+        document.getElementById('checkInEventId').value = btn.getAttribute('data-event-id');
+        document.getElementById('checkInToken').value = '';
+        hideAlerts('checkIn');
+        new bootstrap.Modal(document.getElementById('checkInModal')).show();
+    }
+
+    async function submitCheckIn() {
+        hideAlerts('checkIn');
+
+        const token = document.getElementById('checkInToken').value.trim();
+        if (!token) {
+            showError('checkIn', 'Please paste the QR token.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/attendance/check-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+
+            const text = await res.text();
+            if (!res.ok) {
+                showError('checkIn', text || 'Check-in failed');
+                return;
+            }
+
+            showSuccess('checkIn', 'Checked in successfully. You can rate after the event ends.');
+        } catch (e) {
+            showError('checkIn', 'Network error.');
+        }
+    }
+
+    function openRateModal(btn) {
+        document.getElementById('rateEventId').value = btn.getAttribute('data-event-id');
+        document.getElementById('rateValue').value = '5';
+        document.getElementById('rateComment').value = '';
+        hideAlerts('rate');
+        new bootstrap.Modal(document.getElementById('rateModal')).show();
+    }
+
+    async function submitRating() {
+        hideAlerts('rate');
+
+        const eventId = document.getElementById('rateEventId').value;
+        const rating = parseInt(document.getElementById('rateValue').value, 10);
+        const comment = document.getElementById('rateComment').value;
+
+        try {
+            const res = await fetch(`/api/events/${eventId}/ratings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating, comment })
+            });
+
+            const text = await res.text();
+            if (!res.ok) {
+                showError('rate', text || 'Rating failed');
+                return;
+            }
+
+            showSuccess('rate', 'Thanks! Your rating was saved.');
+            loadRatingSummary(eventId);
+        } catch (e) {
+            showError('rate', 'Network error.');
+        }
+    }
+
+    function hideAlerts(prefix) {
+        document.getElementById(prefix + 'Error').classList.add('d-none');
+        document.getElementById(prefix + 'Success').classList.add('d-none');
+    }
+
+    function showError(prefix, msg) {
+        const el = document.getElementById(prefix + 'Error');
+        el.textContent = msg;
+        el.classList.remove('d-none');
+    }
+
+    function showSuccess(prefix, msg) {
+        const el = document.getElementById(prefix + 'Success');
+        el.textContent = msg;
+        el.classList.remove('d-none');
+    }
+
+    async function loadRatingSummary(eventId) {
+        const container = document.querySelector(`[data-summary-for="${eventId}"]`);
+        if (!container) return;
+        try {
+            const res = await fetch(`/api/events/${eventId}/ratings/summary`);
+            if (!res.ok) return;
+            const data = await res.json();
+            container.querySelector('[data-avg]').textContent = (data.average || 0).toFixed(1);
+            container.querySelector('[data-count]').textContent = (data.count || 0);
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    // Load summaries for all visible events
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[data-summary-for]').forEach(el => {
+            const eventId = el.getAttribute('data-summary-for');
+            loadRatingSummary(eventId);
+        });
+    });
+</script>
 
 </body>
 </html>

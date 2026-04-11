@@ -38,8 +38,8 @@
                             <td class="text-muted" th:text="${#temporals.format(member.joinedAt, 'dd MMM yyyy HH:mm')}"></td>
                             <td class="pe-4 text-end">
 
-                                <!-- Form block for admin actions, shown only if user is not himself an admin -->
-                                <div class="d-flex gap-2 justify-content-end" th:if="${member.role.name() != 'CLUB_ADMIN'}">
+                                <!-- Actions hidden for ADMIN members (avoid demoting/kicking the club admin in UI) -->
+                                <div class="d-flex gap-2 justify-content-end" th:if="${member.role.name() != 'ADMIN'}">
 
                                     <!-- Action to Approve (only if PENDING) -->
                                     <form th:if="${member.status == 'PENDING'}" th:action="@{/club-admin/memberships/{id}/status(id=${member.id})}" method="post">
