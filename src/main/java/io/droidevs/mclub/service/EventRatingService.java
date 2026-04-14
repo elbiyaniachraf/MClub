@@ -1,7 +1,6 @@
 package io.droidevs.mclub.service;
 
 import io.droidevs.mclub.domain.Event;
-import io.droidevs.mclub.domain.EventAttendance;
 import io.droidevs.mclub.domain.EventRating;
 import io.droidevs.mclub.domain.User;
 import io.droidevs.mclub.dto.EventRatingDto;
@@ -9,7 +8,6 @@ import io.droidevs.mclub.dto.EventRatingRequest;
 import io.droidevs.mclub.dto.EventRatingSummaryDto;
 import io.droidevs.mclub.exception.ForbiddenException;
 import io.droidevs.mclub.exception.ResourceNotFoundException;
-import io.droidevs.mclub.repository.EventAttendanceRepository;
 import io.droidevs.mclub.repository.EventRatingRepository;
 import io.droidevs.mclub.repository.EventRegistrationRepository;
 import io.droidevs.mclub.repository.EventRepository;
@@ -19,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,7 +29,7 @@ public class EventRatingService {
     private final EventRegistrationRepository eventRegistrationRepository;
     private final EventRatingRepository eventRatingRepository;
     private final UserRepository userRepository;
-    private final EventAttendanceRepository eventAttendanceRepository;
+    private final AttendanceService attendanceService;
 
     @Transactional
     public EventRatingDto rateEvent(UUID eventId, EventRatingRequest request, String email) {
@@ -44,10 +41,8 @@ public class EventRatingService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        // Rule B: rating only allowed after the event ends
-        if (event.getEndDate() != null && event.getEndDate().isAfter(LocalDateTime.now())) {
-            throw new ForbiddenException("You can rate this event only after it ends");
-        }
+        // Rating is allowed at any time (before/during/after the event).
+        // We still enforce eligibility rules (registered + attended).
 
         // eligibility: must be registered
         if (eventRegistrationRepository.findByUserIdAndEventId(student.getId(), eventId).isEmpty()) {
@@ -55,9 +50,11 @@ public class EventRatingService {
         }
 
         // eligibility: must have attended (checked-in)
-        EventAttendance attendance = eventAttendanceRepository.findByEventIdAndUserId(eventId, student.getId())
-                .orElseThrow(() -> new ForbiddenException("Only students who attended can rate this event"));
+        if (!attendanceService.hasAttended(eventId, student.getId())) {
+            throw new ForbiddenException("Only students who attended can rate this event");
+        }
 
+        // Upsert: keep only the last rating per (event, student)
         EventRating rating = eventRatingRepository.findByEventIdAndStudentId(eventId, student.getId())
                 .orElseGet(() -> EventRating.builder().event(event).student(student).build());
 

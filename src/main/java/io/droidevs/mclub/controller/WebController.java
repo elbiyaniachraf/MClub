@@ -13,6 +13,8 @@ import io.droidevs.mclub.service.AttendanceService;
 import io.droidevs.mclub.service.ClubService;
 import io.droidevs.mclub.service.EventService;
 import io.droidevs.mclub.service.MembershipService;
+import io.droidevs.mclub.service.EventRatingService;
+import io.droidevs.mclub.service.ActivityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +40,8 @@ public class WebController {
     private final ClubRepository clubRepository;
     private final MembershipRepository membershipRepository;
     private final CurrentUserService currentUserService;
+    private final EventRatingService eventRatingService;
+    private final ActivityService activityService;
 
     @GetMapping("/")
     public String dashboard(Model model, Authentication auth) {
@@ -66,7 +70,33 @@ public class WebController {
     public String clubDetail(@PathVariable UUID id, Model model) {
         model.addAttribute("club", clubService.getClub(id));
         model.addAttribute("members", membershipService.getApprovedMembers(id));
+
+        // snapshots
+        model.addAttribute("recentEvents", eventService.getRecentEventsByClub(id));
+        model.addAttribute("recentActivities", activityService.getRecentByClub(id));
+
         return "club-detail";
+    }
+
+    @GetMapping("/clubs/{id}/members")
+    public String clubMembers(@PathVariable UUID id, Model model) {
+        model.addAttribute("club", clubService.getClub(id));
+        model.addAttribute("members", membershipService.getApprovedMembers(id));
+        return "club-members";
+    }
+
+    @GetMapping("/clubs/{id}/events")
+    public String clubEvents(@PathVariable UUID id, Model model) {
+        model.addAttribute("club", clubService.getClub(id));
+        model.addAttribute("events", eventService.getEventsByClub(id));
+        return "club-events";
+    }
+
+    @GetMapping("/clubs/{id}/activities")
+    public String clubActivities(@PathVariable UUID id, Model model) {
+        model.addAttribute("club", clubService.getClub(id));
+        model.addAttribute("activities", activityService.getByClub(id));
+        return "club-activities";
     }
 
     @GetMapping("/events")
@@ -92,10 +122,22 @@ public class WebController {
             }
         }
 
+        // Rating summary (public endpoint; safe for anonymous users)
+        double ratingAverage = 0.0;
+        long ratingCount = 0L;
+        try {
+            var summary = eventRatingService.getSummary(id);
+            ratingAverage = summary.getAverage();
+            ratingCount = summary.getCount();
+        } catch (Exception ignored) {
+        }
+
         model.addAttribute("event", event);
         model.addAttribute("eventEnded", eventEnded);
         model.addAttribute("attendance", attendance);
         model.addAttribute("attendanceCount", attendance.size());
+        model.addAttribute("ratingAverage", ratingAverage);
+        model.addAttribute("ratingCount", ratingCount);
         model.addAttribute("auth", auth);
         return "event-detail";
     }

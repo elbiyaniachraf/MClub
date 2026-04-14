@@ -65,17 +65,24 @@ public class EventService {
         return eventRepository.findByClubId(clubId).stream().map(eventMapper::toDto).collect(Collectors.toList());
     }
 
+    public List<EventDto> getRecentEventsByClub(UUID clubId) {
+        return eventRepository.findTop5ByClubIdOrderByStartDateDesc(clubId).stream()
+                .map(eventMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
     public Page<EventDto> getAllEvents(org.springframework.data.domain.Pageable pageable) {
         return eventRepository.findAll(pageable).map(eventMapper::toDto);
     }
 
     public Event getEvent(UUID id) {
-        return eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        return eventRepository.findByIdWithClub(id)
+                .orElseGet(() -> eventRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Event not found")));
     }
 
     public void requireCanManageEvent(String email, UUID eventId) {
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdWithClub(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
         clubAuthorizationService.requirePlatformAdminOrClubAdminOrStaff(email, event.getClub().getId());
     }

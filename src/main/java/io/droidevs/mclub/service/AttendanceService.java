@@ -142,10 +142,14 @@ public class AttendanceService {
         return toDto(eventAttendanceRepository.save(attendance));
     }
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<AttendanceRecordDto> listAttendance(UUID eventId, String organizerEmail) {
         Event event = getEvent(eventId);
         clubAuthorizationService.requirePlatformAdminOrClubAdminOrStaff(organizerEmail, event.getClub().getId());
-        return eventAttendanceRepository.findByEventId(eventId).stream().map(this::toDto).collect(Collectors.toList());
+        return eventAttendanceRepository.findByEventIdWithUserAndEvent(eventId)
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     public boolean hasAttended(UUID eventId, UUID studentId) {

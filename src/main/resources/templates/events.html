@@ -57,13 +57,11 @@
                             </a>
 
                             <!-- Student rating -->
-                            <button type="button"
-                                    class="btn btn-outline-warning rounded-pill"
-                                    sec:authorize="hasRole('STUDENT')"
-                                    th:attr="data-event-id=${event.id}"
-                                    onclick="openRateModal(this)">
+                            <a class="btn btn-outline-warning rounded-pill"
+                               sec:authorize="hasRole('STUDENT')"
+                               th:href="@{/events/{eventId}/rate(eventId=${event.id})}">
                                 <i class="bi bi-star-fill me-1"></i>Rate
-                            </button>
+                            </a>
                         </div>
                     </div>
 

@@ -12,6 +12,8 @@ import java.util.UUID;
 public interface EventRepository extends JpaRepository<Event, UUID> {
     List<Event> findByClubId(UUID clubId);
 
+    List<Event> findTop5ByClubIdOrderByStartDateDesc(UUID clubId);
+
     @Query("select e from Event e join fetch e.club where e.id = :id")
     Optional<Event> findByIdWithClub(@Param("id") UUID id);
 }

@@ -65,5 +65,10 @@ public class ActivityService {
     public List<ActivityDto> getByClub(UUID clubId) {
         return activityRepository.findByClubId(clubId).stream().map(activityMapper::toDto).collect(Collectors.toList());
     }
-}
 
+    public List<ActivityDto> getRecentByClub(UUID clubId) {
+        return activityRepository.findTop5ByClubIdOrderByDateDesc(clubId).stream()
+                .map(activityMapper::toDto)
+                .collect(Collectors.toList());
+    }
+}

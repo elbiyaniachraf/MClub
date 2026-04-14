@@ -4,11 +4,24 @@
 <body th:replace="~{layout :: body(content=~{this :: content})}">
 
 <div class="container" th:fragment="content">
-    <div class="row mt-4 mb-3">
+    <div class="row mt-4 mb-3 align-items-start">
         <div class="col">
             <h2 class="display-6"><i class="bi bi-people-fill text-primary"></i> <span th:text="${club.name}">Club Name</span></h2>
             <p class="text-muted" th:text="${club.description}">Club description...</p>
+
+            <div class="d-flex gap-2 flex-wrap mt-2">
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/clubs/{id}/members(id=${club.id})}">
+                    <i class="bi bi-people"></i> Members
+                </a>
+                <a class="btn btn-outline-warning btn-sm" th:href="@{/clubs/{id}/events(id=${club.id})}">
+                    <i class="bi bi-calendar-event"></i> All events
+                </a>
+                <a class="btn btn-outline-info btn-sm" th:href="@{/clubs/{id}/activities(id=${club.id})}">
+                    <i class="bi bi-lightning"></i> All activities
+                </a>
+            </div>
         </div>
+
         <div class="col-auto d-flex align-items-start" sec:authorize="isAuthenticated() and !hasRole('PLATFORM_ADMIN')">
             <form th:action="@{/memberships/club/{id}/join(id=${club.id})}" method="post">
                 <button type="submit" class="btn btn-success mt-2">Join Club</button>
@@ -16,22 +29,58 @@
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-8">
+    <div class="row g-3 mt-2">
+        <div class="col-lg-6">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">Members</h5>
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent events</h5>
+                    <a class="btn btn-link btn-sm" th:href="@{/clubs/{id}/events(id=${club.id})}">View all</a>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center" th:each="member : ${members}">
-                            <div>
-                                <div class="fw-semibold" th:text="${member.userFullName}">Member Name</div>
-                                <div class="text-muted small" th:text="${member.role}">Role</div>
+                        <li class="list-group-item" th:each="e : ${recentEvents}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold" th:text="${e.title}">Event</div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-clock"></i>
+                                        <span th:text="${#temporals.format(e.startDate, 'dd MMM yyyy HH:mm')}"></span>
+                                    </div>
+                                </div>
+                                <a class="btn btn-outline-primary btn-sm" th:href="@{/events/{id}(id=${e.id})}">Open</a>
                             </div>
                         </li>
-                        <li class="list-group-item text-center text-muted" th:if="${#lists.isEmpty(members)}">
-                            No approved members yet.
+                        <li class="list-group-item text-center text-muted" th:if="${#lists.isEmpty(recentEvents)}">
+                            No events yet.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent activities</h5>
+                    <a class="btn btn-link btn-sm" th:href="@{/clubs/{id}/activities(id=${club.id})}">View all</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" th:each="a : ${recentActivities}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold" th:text="${a.title}">Activity</div>
+                                    <div class="text-muted small">
+                                        <i class="bi bi-clock"></i>
+                                        <span th:text="${#temporals.format(a.date, 'dd MMM yyyy HH:mm')}"></span>
+                                    </div>
+                                </div>
+                                <a class="btn btn-outline-primary btn-sm" th:if="${a.eventId != null}" th:href="@{/events/{id}(id=${a.eventId})}">Event</a>
+                                <span class="text-muted small" th:if="${a.eventId == null}">—</span>
+                            </div>
+                        </li>
+                        <li class="list-group-item text-center text-muted" th:if="${#lists.isEmpty(recentActivities)}">
+                            No activities yet.
                         </li>
                     </ul>
                 </div>

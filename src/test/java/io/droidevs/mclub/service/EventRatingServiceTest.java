@@ -25,7 +25,7 @@ class EventRatingServiceTest {
     @Autowired EventRatingService eventRatingService;
 
     @Test
-    void studentCanRateOnlyIfRegistered_andAfterEventEnds_andAttended() {
+    void studentCanRateOnlyIfRegistered_andAttended_andUpdatesExistingRating() {
         User student = userRepository.save(User.builder()
                 .email("s@test.com")
                 .password("x")
@@ -48,17 +48,11 @@ class EventRatingServiceTest {
         req.setRating(5);
         req.setComment("great");
 
-        // too early (event not ended)
-        assertThrows(RuntimeException.class, () -> eventRatingService.rateEvent(event.getId(), req, student.getEmail()));
+         // still cannot rate before attendance
+         assertThrows(RuntimeException.class, () -> eventRatingService.rateEvent(event.getId(), req, student.getEmail()));
 
-        // end event (now rating time condition passes) but still not attended
-        event.setEndDate(LocalDateTime.now().minusMinutes(1));
-        eventRepository.save(event);
-
-        assertThrows(RuntimeException.class, () -> eventRatingService.rateEvent(event.getId(), req, student.getEmail()));
-
-        // mark attended
-        eventAttendanceRepository.save(EventAttendance.builder()
+         // mark attended
+         eventAttendanceRepository.save(EventAttendance.builder()
                 .event(event)
                 .user(student)
                 .method(AttendanceMethod.STUDENT_SCANNED_EVENT_QR)
