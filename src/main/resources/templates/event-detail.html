@@ -28,22 +28,25 @@
                 </div>
             </div>
 
-            <!-- Comments -->
-            <div class="card shadow-sm border-0 mt-3" id="commentsCard">
+            <!-- Comments (post only) -->
+            <div class="card shadow-sm border-0 mt-3">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Comments</h5>
-                    <small class="text-muted" id="commentsHint">Loading…</small>
+                    <a class="btn btn-sm btn-outline-secondary" th:href="@{/comments/EVENT/{id}(id=${event.id})}">
+                        View all
+                    </a>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3" sec:authorize="hasRole('STUDENT')">
-                        <label class="form-label">Add a comment</label>
-                        <textarea id="newComment" class="form-control" rows="3" maxlength="2000" placeholder="Be respectful…"></textarea>
-                        <div class="d-flex justify-content-end mt-2">
-                            <button class="btn btn-primary" id="postCommentBtn">Post</button>
-                        </div>
+                    <div class="mb-2" sec:authorize="hasRole('STUDENT')">
+                        <form th:action="@{/comments/EVENT/{id}(id=${event.id})}" method="post">
+                            <label class="form-label">Add a comment</label>
+                            <textarea name="content" class="form-control" rows="3" maxlength="2000" placeholder="Be respectful…" required></textarea>
+                            <div class="d-flex justify-content-end mt-2">
+                                <button class="btn btn-primary" type="submit">Post</button>
+                            </div>
+                        </form>
+                        <div class="form-text">To reply to comments, open “View all”.</div>
                     </div>
-
-                    <div id="commentsList"></div>
 
                     <div class="text-muted" th:if="${auth == null}">
                         <small>Login to comment.</small>
@@ -117,7 +120,6 @@
         const el = document.getElementById('ratingSummary');
         el.textContent = 'Loading…';
         try {
-            // Backend endpoint is GET /api/events/{eventId}/ratings/summary
             const res = await withTimeout(fetch(`/api/events/${EVENT_ID}/ratings/summary`, { credentials: 'same-origin' }), 8000);
             if (!res.ok) {
                 el.textContent = 'No rating summary available.';
@@ -147,115 +149,8 @@
         await loadRatingSummary();
     }
 
-    function escapeHtml(s) {
-        return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    function renderComment(c, depth) {
-        const wrap = document.createElement('div');
-        wrap.className = 'border rounded p-2 mb-2';
-        wrap.style.marginLeft = Math.min(depth * 18, 72) + 'px';
-
-        const header = document.createElement('div');
-        header.className = 'd-flex justify-content-between align-items-center';
-        header.innerHTML = `<div class="fw-semibold">${escapeHtml(c.authorFullName)}</div>
-                            <div class="text-muted small">${c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>`;
-
-        const body = document.createElement('div');
-        body.className = 'mt-1';
-        body.innerHTML = `<div>${escapeHtml(c.content)}</div>`;
-
-        const actions = document.createElement('div');
-        actions.className = 'mt-2 d-flex gap-2 align-items-center';
-        actions.innerHTML = `
-            <button class="btn btn-sm btn-outline-secondary" data-like="${c.id}">
-                Like <span class="badge text-bg-light">${c.likeCount}</span>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" data-reply="${c.id}">Reply</button>
-        `;
-
-        const replies = document.createElement('div');
-        (c.replies || []).forEach(r => replies.appendChild(renderComment(r, depth + 1)));
-
-        wrap.appendChild(header);
-        wrap.appendChild(body);
-        wrap.appendChild(actions);
-        wrap.appendChild(replies);
-        return wrap;
-    }
-
-    async function loadComments() {
-        const hint = document.getElementById('commentsHint');
-        const list = document.getElementById('commentsList');
-        list.innerHTML = '';
-        hint.textContent = 'Loading…';
-        try {
-            const res = await withTimeout(fetch(`/api/comments/EVENT/${EVENT_ID}`, { credentials: 'same-origin' }), 8000);
-            if (!res.ok) {
-                const txt = await safeText(res);
-                hint.textContent = txt || (res.status === 401 ? 'Login to view comments.' : 'Failed to load');
-                return;
-            }
-            const data = await res.json();
-            hint.textContent = data.length ? `${data.length} threads` : 'No comments yet';
-            data.forEach(c => list.appendChild(renderComment(c, 0)));
-        } catch (e) {
-            hint.textContent = 'Failed to load';
-        }
-    }
-
-    async function postComment(content, parentId) {
-        const res = await fetch(`/api/comments/EVENT/${EVENT_ID}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ content, parentId: parentId || null })
-        });
-        if (!res.ok) {
-            const txt = await safeText(res);
-            alert(txt || (res.status === 401 ? 'Please login.' : 'Could not post comment'));
-            return;
-        }
-        await loadComments();
-    }
-
-    async function toggleLike(commentId) {
-        const res = await fetch(`/api/comments/${commentId}/like`, { method: 'POST', credentials: 'same-origin' });
-        if (!res.ok) {
-            const txt = await safeText(res);
-            alert(txt || (res.status === 401 ? 'Please login.' : 'Could not like'));
-            return;
-        }
-        await loadComments();
-    }
-
-    document.addEventListener('click', async (e) => {
-        const likeBtn = e.target.closest('[data-like]');
-        if (likeBtn) {
-            await toggleLike(likeBtn.getAttribute('data-like'));
-        }
-        const replyBtn = e.target.closest('[data-reply]');
-        if (replyBtn) {
-            const parentId = replyBtn.getAttribute('data-reply');
-            const content = prompt('Reply:');
-            if (content && content.trim()) {
-                await postComment(content.trim(), parentId);
-            }
-        }
-    });
-
-    document.getElementById('postCommentBtn')?.addEventListener('click', async () => {
-        const ta = document.getElementById('newComment');
-        const content = ta.value.trim();
-        if (!content) return;
-        await postComment(content, null);
-        ta.value = '';
-    });
-
     document.getElementById('rateBtn')?.addEventListener('click', submitRating);
-
     loadRatingSummary();
-    loadComments();
 </script>
 
 </body>
