@@ -18,13 +18,14 @@ import java.util.UUID;
 public class ActivityController {
 
     private final ActivityService activityService;
+    private final io.droidevs.mclub.mapper.ActivityCreateRequestMapper activityCreateRequestMapper;
 
     @PostMapping
     public ResponseEntity<ActivityDto> create(@Valid @RequestBody ActivityCreateRequest request, Authentication auth) {
         if (auth == null) {
             return ResponseEntity.status(401).build();
         }
-        return ResponseEntity.ok(activityService.create(request.toDto(), auth.getName()));
+        return ResponseEntity.ok(activityService.create(activityCreateRequestMapper.toDto(request), auth.getName()));
     }
 
     @GetMapping("/club/{clubId}")
