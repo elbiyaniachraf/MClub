@@ -20,7 +20,7 @@ public interface CommentMapper {
     @Mapping(source = "likeCount", target = "likeCount")
     @Mapping(source = "likedByMe", target = "likedByMe")
     @Mapping(expression = "java(c.isDeleted() ? \"[deleted]\" : c.getContent())", target = "content")
-    @Mapping(expression = "java(java.util.Collections.emptyList())", target = "replies")
+    @Mapping(expression = "java(new java.util.ArrayList<>())", target = "replies")
     @Mapping(constant = "0", target = "replyCount")
     @Mapping(constant = "false", target = "hasMoreReplies")
     CommentDto toDto(Comment c, long likeCount, boolean likedByMe);
