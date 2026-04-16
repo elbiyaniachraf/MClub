@@ -1,6 +1,5 @@
 # MClub – RAG Conversational Assistant (WhatsApp)
 
-
 This document describes the **RAG-based conversational system** integrated into the existing **MClub** Spring Boot application.
 
 
