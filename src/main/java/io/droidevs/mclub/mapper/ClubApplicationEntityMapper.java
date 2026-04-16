@@ -6,13 +6,11 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", config = CentralMapperConfig.class)
-public interface ClubApplicationMapper {
-    @Mapping(target = "submittedById", source = "submittedBy.id")
-    @Mapping(target = "submittedByName", source = "submittedBy.fullName")
-    @Mapping(target = "submittedByEmail", source = "submittedBy.email")
-    ClubApplicationDto toDto(ClubApplication application);
+public interface ClubApplicationEntityMapper {
 
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "submittedBy", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     ClubApplication toEntity(ClubApplicationDto dto);
 }
 

@@ -6,6 +6,7 @@ import io.droidevs.mclub.domain.Event;
 import io.droidevs.mclub.domain.User;
 import io.droidevs.mclub.dto.ActivityDto;
 import io.droidevs.mclub.exception.ResourceNotFoundException;
+import io.droidevs.mclub.mapper.ActivityEntityMapper;
 import io.droidevs.mclub.mapper.ActivityMapper;
 import io.droidevs.mclub.repository.ActivityRepository;
 import io.droidevs.mclub.repository.ClubRepository;
@@ -28,6 +29,7 @@ public class ActivityService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final ActivityMapper activityMapper;
+    private final ActivityEntityMapper activityEntityMapper;
     private final ClubAuthorizationService clubAuthorizationService;
 
     public ActivityDto create(ActivityDto dto, String email) {
@@ -51,14 +53,11 @@ public class ActivityService {
             }
         }
 
-        Activity a = Activity.builder()
-                .club(club)
-                .event(event)
-                .title(dto.getTitle())
-                .description(dto.getDescription())
-                .date(dto.getDate())
-                .createdBy(user)
-                .build();
+        // MapStruct maps simple scalar fields; service sets controlled relationships.
+        Activity a = activityEntityMapper.toEntity(dto);
+        a.setClub(club);
+        a.setEvent(event);
+        a.setCreatedBy(user);
 
         return activityMapper.toDto(activityRepository.save(a));
     }

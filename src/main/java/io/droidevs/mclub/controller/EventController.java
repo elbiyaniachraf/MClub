@@ -17,13 +17,14 @@ import java.util.UUID;
 public class EventController {
     private final EventService eventService;
     private final RegistrationService registrationService;
+    private final io.droidevs.mclub.mapper.EventCreateRequestMapper eventCreateRequestMapper;
 
     @PostMapping
     public ResponseEntity<EventDto> createEvent(@Valid @RequestBody EventCreateRequest request, Authentication auth) {
         if (auth == null) {
             return ResponseEntity.status(401).build();
         }
-        return ResponseEntity.ok(eventService.createEvent(request.toDto(), auth.getName()));
+        return ResponseEntity.ok(eventService.createEvent(eventCreateRequestMapper.toDto(request), auth.getName()));
     }
 
     @GetMapping("/club/{clubId}")

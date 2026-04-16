@@ -4,6 +4,7 @@ import io.droidevs.mclub.domain.*;
 import io.droidevs.mclub.dto.*;
 import io.droidevs.mclub.exception.ForbiddenException;
 import io.droidevs.mclub.exception.ResourceNotFoundException;
+import io.droidevs.mclub.mapper.AttendanceMapper;
 import io.droidevs.mclub.repository.*;
 import io.droidevs.mclub.security.Role;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,9 @@ public class AttendanceService {
     private final EventAttendanceWindowRepository windowRepository;
     private final ClubAuthorizationService clubAuthorizationService;
     private final AttendanceTokenService attendanceTokenService;
+    private final AttendanceMapper attendanceMapper;
+    private final io.droidevs.mclub.mapper.EventAttendanceFactoryMapper eventAttendanceFactoryMapper;
+    private final io.droidevs.mclub.mapper.EventAttendanceWindowFactoryMapper eventAttendanceWindowFactoryMapper;
 
     @Transactional
     public AttendanceEventQrDto openOrUpdateWindow(UUID eventId, AttendanceWindowRequest request, String organizerEmail) {
@@ -36,7 +40,7 @@ public class AttendanceService {
         String tokenHash = attendanceTokenService.sha256Hex(rawToken);
 
         EventAttendanceWindow window = windowRepository.findByEventId(eventId)
-                .orElseGet(() -> EventAttendanceWindow.builder().event(event).build());
+                .orElseGet(() -> eventAttendanceWindowFactoryMapper.create(event));
 
         window.setActive(true);
         window.setOpensBeforeStartMinutes(request.getOpensBeforeStartMinutes());
@@ -88,17 +92,15 @@ public class AttendanceService {
         // idempotent: if already checked-in, return existing record
         EventAttendance existing = eventAttendanceRepository.findByEventIdAndUserId(event.getId(), student.getId()).orElse(null);
         if (existing != null) {
-            return toDto(existing);
+            return attendanceMapper.toDto(existing);
         }
 
-        EventAttendance attendance = EventAttendance.builder()
-                .event(event)
-                .user(student)
-                .checkedInBy(null)
-                .method(AttendanceMethod.STUDENT_SCANNED_EVENT_QR)
-                .build();
+        EventAttendance attendance = eventAttendanceFactoryMapper.create(AttendanceMethod.STUDENT_SCANNED_EVENT_QR);
+        attendance.setEvent(event);
+        attendance.setUser(student);
+        attendance.setCheckedInBy(null);
 
-        return toDto(eventAttendanceRepository.save(attendance));
+        return attendanceMapper.toDto(eventAttendanceRepository.save(attendance));
     }
 
     @Transactional
@@ -127,19 +129,17 @@ public class AttendanceService {
 
         EventAttendance existing = eventAttendanceRepository.findByEventIdAndUserId(eventId, studentId).orElse(null);
         if (existing != null) {
-            return toDto(existing);
+            return attendanceMapper.toDto(existing);
         }
 
         User organizer = userRepository.findByEmail(organizerEmail).orElseThrow();
 
-        EventAttendance attendance = EventAttendance.builder()
-                .event(event)
-                .user(student)
-                .checkedInBy(organizer)
-                .method(AttendanceMethod.ADMIN_SCANNED_STUDENT_QR)
-                .build();
+        EventAttendance attendance = eventAttendanceFactoryMapper.create(AttendanceMethod.ADMIN_SCANNED_STUDENT_QR);
+        attendance.setEvent(event);
+        attendance.setUser(student);
+        attendance.setCheckedInBy(organizer);
 
-        return toDto(eventAttendanceRepository.save(attendance));
+        return attendanceMapper.toDto(eventAttendanceRepository.save(attendance));
     }
 
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
@@ -148,7 +148,7 @@ public class AttendanceService {
         clubAuthorizationService.requirePlatformAdminOrClubAdminOrStaff(organizerEmail, event.getClub().getId());
         return eventAttendanceRepository.findByEventIdWithUserAndEvent(eventId)
                 .stream()
-                .map(this::toDto)
+                .map(attendanceMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -179,17 +179,6 @@ public class AttendanceService {
 
     private Event getEvent(UUID eventId) {
         return eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-    }
-
-    private AttendanceRecordDto toDto(EventAttendance a) {
-        AttendanceRecordDto dto = new AttendanceRecordDto();
-        dto.setId(a.getId());
-        dto.setEventId(a.getEvent().getId());
-        dto.setUserId(a.getUser().getId());
-        dto.setUserEmail(a.getUser().getEmail());
-        dto.setCheckedInAt(a.getCheckedInAt());
-        dto.setMethod(a.getMethod().name());
-        return dto;
     }
 }
 

@@ -19,6 +19,7 @@ public class MembershipService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final MembershipMapper membershipMapper;
+    private final MembershipFactoryMapper membershipFactoryMapper;
 
     public MembershipDto joinClub(UUID clubId, String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
@@ -27,12 +28,9 @@ public class MembershipService {
             throw new RuntimeException("Already joined");
         }
 
-        Membership m = Membership.builder()
-                .user(user)
-                .club(club)
-                .role(ClubRole.MEMBER)
-                .status(MembershipStatus.PENDING)
-                .build();
+        Membership m = membershipFactoryMapper.create(ClubRole.MEMBER, MembershipStatus.PENDING);
+        m.setUser(user);
+        m.setClub(club);
 
         return membershipMapper.toDto(membershipRepository.save(m));
     }

@@ -8,6 +8,7 @@ import io.droidevs.mclub.dto.EventRatingRequest;
 import io.droidevs.mclub.dto.EventRatingSummaryDto;
 import io.droidevs.mclub.exception.ForbiddenException;
 import io.droidevs.mclub.exception.ResourceNotFoundException;
+import io.droidevs.mclub.mapper.EventRatingMapper;
 import io.droidevs.mclub.repository.EventRatingRepository;
 import io.droidevs.mclub.repository.EventRegistrationRepository;
 import io.droidevs.mclub.repository.EventRepository;
@@ -30,6 +31,8 @@ public class EventRatingService {
     private final EventRatingRepository eventRatingRepository;
     private final UserRepository userRepository;
     private final AttendanceService attendanceService;
+    private final EventRatingMapper eventRatingMapper;
+    private final io.droidevs.mclub.mapper.EventRatingFactoryMapper eventRatingFactoryMapper;
 
     @Transactional
     public EventRatingDto rateEvent(UUID eventId, EventRatingRequest request, String email) {
@@ -56,19 +59,24 @@ public class EventRatingService {
 
         // Upsert: keep only the last rating per (event, student)
         EventRating rating = eventRatingRepository.findByEventIdAndStudentId(eventId, student.getId())
-                .orElseGet(() -> EventRating.builder().event(event).student(student).build());
+                .orElseGet(() -> {
+                    EventRating r = eventRatingFactoryMapper.create();
+                    r.setEvent(event);
+                    r.setStudent(student);
+                    return r;
+                });
 
         rating.setRating(request.getRating());
         rating.setComment(request.getComment());
 
-        return toDto(eventRatingRepository.save(rating));
+        return eventRatingMapper.toDto(eventRatingRepository.save(rating));
     }
 
     public EventRatingDto getMyRating(UUID eventId, String email) {
         User student = userRepository.findByEmail(email).orElseThrow();
         EventRating rating = eventRatingRepository.findByEventIdAndStudentId(eventId, student.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Rating not found"));
-        return toDto(rating);
+        return eventRatingMapper.toDto(rating);
     }
 
     public EventRatingSummaryDto getSummary(UUID eventId) {
@@ -78,18 +86,6 @@ public class EventRatingService {
     }
 
     public List<EventRatingDto> getAllRatingsForEvent(UUID eventId) {
-        return eventRatingRepository.findByEventId(eventId).stream().map(this::toDto).collect(Collectors.toList());
-    }
-
-    private EventRatingDto toDto(EventRating r) {
-        EventRatingDto dto = new EventRatingDto();
-        dto.setId(r.getId());
-        dto.setEventId(r.getEvent().getId());
-        dto.setStudentEmail(r.getStudent().getEmail());
-        dto.setRating(r.getRating());
-        dto.setComment(r.getComment());
-        dto.setCreatedAt(r.getCreatedAt());
-        dto.setUpdatedAt(r.getUpdatedAt());
-        return dto;
+        return eventRatingRepository.findByEventId(eventId).stream().map(eventRatingMapper::toDto).collect(Collectors.toList());
     }
 }

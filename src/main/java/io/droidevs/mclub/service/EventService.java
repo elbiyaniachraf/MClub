@@ -22,6 +22,7 @@ public class EventService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final EventMapper eventMapper;
+    private final EventEntityMapper eventEntityMapper;
     private final ClubAuthorizationService clubAuthorizationService;
 
     public EventDto createEvent(EventDto dto, String email) {
@@ -54,10 +55,10 @@ public class EventService {
 
         User user = userRepository.findByEmail(email).orElseThrow();
 
-        Event event = Event.builder()
-                .title(dto.getTitle()).description(dto.getDescription())
-                .location(dto.getLocation()).startDate(dto.getStartDate())
-                .endDate(dto.getEndDate()).club(club).createdBy(user).build();
+        // MapStruct maps simple scalar fields; service sets controlled relationships.
+        Event event = eventEntityMapper.toEntity(dto);
+        event.setClub(club);
+        event.setCreatedBy(user);
 
         return eventMapper.toDto(eventRepository.save(event));
     }

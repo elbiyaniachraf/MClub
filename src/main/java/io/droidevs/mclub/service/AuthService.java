@@ -1,6 +1,7 @@
 package io.droidevs.mclub.service;
 import io.droidevs.mclub.domain.User;
 import io.droidevs.mclub.dto.*;
+import io.droidevs.mclub.mapper.UserEntityMapper;
 import io.droidevs.mclub.repository.UserRepository;
 import io.droidevs.mclub.security.JwtTokenProvider;
 import io.droidevs.mclub.security.Role;
@@ -17,6 +18,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
+    private final UserEntityMapper userEntityMapper;
 
     public AuthResponse authenticateUser(AuthRequest request) {
         Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
@@ -30,8 +32,9 @@ public class AuthService {
         } else {
             r = Role.STUDENT;
         }
-        User user = User.builder().email(req.getEmail()).password(passwordEncoder.encode(req.getPassword()))
-                .fullName(req.getFullName()).role(r).build();
+        User user = userEntityMapper.toEntity(req);
+        user.setPassword(passwordEncoder.encode(req.getPassword()));
+        user.setRole(r);
         userRepository.save(user);
     }
 }

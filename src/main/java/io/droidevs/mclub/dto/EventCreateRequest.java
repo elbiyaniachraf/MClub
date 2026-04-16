@@ -31,15 +31,5 @@ public class EventCreateRequest {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime endDate;
 
-    public EventDto toDto() {
-        EventDto dto = new EventDto();
-        dto.setClubId(clubId);
-        dto.setTitle(title);
-        dto.setDescription(description);
-        dto.setLocation(location);
-        dto.setStartDate(startDate);
-        dto.setEndDate(endDate);
-        return dto;
-    }
 }
 

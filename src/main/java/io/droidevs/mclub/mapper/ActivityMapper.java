@@ -3,7 +3,8 @@ import io.droidevs.mclub.domain.Activity;
 import io.droidevs.mclub.dto.ActivityDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-@Mapper(componentModel = "spring")
+
+@Mapper(componentModel = "spring", config = CentralMapperConfig.class)
 public interface ActivityMapper {
     @Mapping(source = "club.id", target = "clubId")
     @Mapping(source = "event.id", target = "eventId")

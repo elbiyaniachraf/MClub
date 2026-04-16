@@ -4,6 +4,7 @@ import io.droidevs.mclub.domain.Club;
 import io.droidevs.mclub.domain.User;
 import io.droidevs.mclub.dto.ClubDto;
 import io.droidevs.mclub.exception.ResourceNotFoundException;
+import io.droidevs.mclub.mapper.ClubEntityMapper;
 import io.droidevs.mclub.mapper.ClubMapper;
 import io.droidevs.mclub.repository.ClubRepository;
 import io.droidevs.mclub.repository.UserRepository;
@@ -21,10 +22,12 @@ public class ClubService {
     private final ClubRepository clubRepository;
     private final UserRepository userRepository;
     private final ClubMapper clubMapper;
+    private final ClubEntityMapper clubEntityMapper;
 
     public ClubDto createClub(ClubDto dto, String email) {
         User user = userRepository.findByEmail(email).orElseThrow();
-        Club c = Club.builder().name(dto.getName()).description(dto.getDescription()).createdBy(user).build();
+        Club c = clubEntityMapper.toEntity(dto);
+        c.setCreatedBy(user);
         return clubMapper.toDto(clubRepository.save(c));
     }
 

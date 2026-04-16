@@ -26,14 +26,5 @@ public class ActivityCreateRequest {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime date;
 
-    public ActivityDto toDto() {
-        ActivityDto dto = new ActivityDto();
-        dto.setClubId(clubId);
-        dto.setEventId(eventId);
-        dto.setTitle(title);
-        dto.setDescription(description);
-        dto.setDate(date);
-        return dto;
-    }
 }
 
