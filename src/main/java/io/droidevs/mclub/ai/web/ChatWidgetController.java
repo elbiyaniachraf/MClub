@@ -19,8 +19,13 @@ public class ChatWidgetController {
     private final PlatformChatService platformChatService;
 
     @PostMapping("/message")
-    public ChatMessageResponse send(@RequestBody @Valid ChatMessageRequest req) {
-        var r = platformChatService.chat(req.conversationId(), req.from(), req.text());
+    public ChatMessageResponse send(jakarta.servlet.http.HttpSession httpSession,
+                                    @RequestBody @Valid ChatMessageRequest req) {
+        String conversationId = (req.conversationId() == null || req.conversationId().isBlank())
+                ? "web:" + httpSession.getId()
+                : req.conversationId();
+
+        var r = platformChatService.chat(conversationId, req.from(), req.text());
         return new ChatMessageResponse(r.message());
     }
 }

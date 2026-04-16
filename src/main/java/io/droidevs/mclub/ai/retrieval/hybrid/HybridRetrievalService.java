@@ -45,7 +45,8 @@ public class HybridRetrievalService implements RetrievalService {
             List<VectorSearchResult> hits = vector.retrieveSimilar(ctx, userMessage, 5);
             factual.add("RetrievalMode: hybrid(structured+vector)");
             for (VectorSearchResult hit : hits) {
-                semanticHits.add("[vector score=" + hit.score() + "] " + hit.docType() + " sourceId=" + hit.sourceId() + " :: " + hit.content());
+                semanticHits.add("[vector score=" + hit.score() + "] " + hit.entityType() + " entityId=" + hit.entityId() + " :: " + hit.content());
+
             }
         } catch (Exception e) {
             // Safe fallback (do not break chat) if vector is temporarily unavailable.

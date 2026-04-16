@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 /** Request from platform chat widget (web/mobile). */
 public record ChatMessageRequest(
-        @NotBlank String conversationId,
+        String conversationId,
         @NotBlank String from,
         @NotBlank String text
 ) {}

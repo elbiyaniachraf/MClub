@@ -20,11 +20,20 @@ public class AiEmbeddingDocument {
     @Id
     private UUID id;
 
-    @Column(name = "doc_type", nullable = false, length = 32)
-    private String docType;
+    @Column(name = "entity_type", nullable = false, length = 16)
+    private String entityType;
 
-    @Column(name = "source_id")
-    private UUID sourceId;
+    @Column(name = "event_id")
+    private UUID eventId;
+
+    @Column(name = "club_id")
+    private UUID clubId;
+
+    @Column(name = "activity_id")
+    private UUID activityId;
+
+    @Column(name = "comment_id")
+    private UUID commentId;
 
     @Column(name = "chunk_index", nullable = false)
     private int chunkIndex;

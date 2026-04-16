@@ -42,9 +42,9 @@ public class SearchSemanticTool implements Tool {
         sb.append("Semantic matches:\n");
         for (var h : hits) {
             sb.append("- [").
-                    append(h.docType()).
-                    append("] id=").
-                    append(h.sourceId()).
+                    append(h.entityType()).
+                    append("] entityId=").
+                    append(h.entityId()).
                     append(" score=").
                     append(h.score()).
                     append(" :: ").

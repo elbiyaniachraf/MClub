@@ -21,7 +21,8 @@ public class VectorRetrievalService {
     public List<VectorSearchResult> retrieveSimilar(ConversationContext ctx, String userMessage, int topK) {
         List<Double> emb = embeddingService.embed(userMessage);
         String literal = toPgvectorLiteral(emb);
-        return vectorDbService.search(literal, topK);
+        return vectorDbService.search(literal, topK, null);
+
     }
 
     static String toPgvectorLiteral(List<Double> emb) {

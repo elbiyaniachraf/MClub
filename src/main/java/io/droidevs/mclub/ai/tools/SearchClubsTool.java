@@ -43,7 +43,7 @@ public class SearchClubsTool implements Tool {
         sb.append("Club matches:\n");
         int i = 1;
         for (var h : hits) {
-            sb.append(i++).append(") id=").append(h.sourceId())
+            sb.append(i++).append(") entityId=").append(h.entityId())
                     .append(" score=").append(h.score())
                     .append(" :: ").append(h.content())
                     .append("\n");

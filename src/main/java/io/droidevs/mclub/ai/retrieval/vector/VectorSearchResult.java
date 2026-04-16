@@ -5,8 +5,8 @@ import java.util.UUID;
 /** Lightweight DTO for vector search results. */
 public record VectorSearchResult(
         UUID id,
-        String docType,
-        UUID sourceId,
+        String entityType,
+        UUID entityId,
         String content,
         double score
 ) {

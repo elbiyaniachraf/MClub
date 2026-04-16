@@ -44,7 +44,7 @@ public class SearchEventsTool implements Tool {
         int i = 1;
         var candidates = new java.util.ArrayList<java.util.Map<String, Object>>();
         for (var h : hits) {
-            sb.append(i).append(") id=").append(h.sourceId())
+            sb.append(i).append(") entityId=").append(h.entityId())
                     .append(" score=").append(h.score())
                     .append(" :: ").append(h.content())
                     .append("\n");
@@ -52,7 +52,7 @@ public class SearchEventsTool implements Tool {
             candidates.add(java.util.Map.of(
                     "index", i,
                     "entityType", "EVENT",
-                    "entityId", String.valueOf(h.sourceId()),
+                    "entityId", String.valueOf(h.entityId()),
                     "score", h.score(),
                     "snippet", h.content()
             ));
