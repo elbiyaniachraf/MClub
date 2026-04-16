@@ -32,7 +32,7 @@ public class HybridRetrievalService implements RetrievalService {
         RetrievalContext base = structured.retrieve(ctx, userMessage);
 
         List<String> factual = new ArrayList<>(base.factualSnippets());
-        List<String> relevant = new ArrayList<String>(base.recentEvents());
+        List<String> relevant = new ArrayList<>(base.recentEvents());
 
         VectorRetrievalService vector = vectorRetrievalServiceProvider.getIfAvailable();
         if (vector == null) {
