@@ -16,12 +16,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private static final AntPathRequestMatcher API_MATCHER = new AntPathRequestMatcher("/api/**");
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -57,39 +60,57 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, OncePerRequestFilter jwtAuthenticationFilterForChain) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+        http
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // API should respond with 401 for anonymous and 403 for forbidden, without redirects
                 .exceptionHandling(ex -> ex
-                        .defaultAuthenticationEntryPointFor(
-                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/api/**")
-                        )
-                        .defaultAccessDeniedHandlerFor(
-                                (request, response, accessDeniedException) -> response.sendError(HttpStatus.FORBIDDEN.value(), "Forbidden"),
-                                new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/api/**")
-                        )
+                        .defaultAuthenticationEntryPointFor(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED), API_MATCHER)
+                        .defaultAccessDeniedHandlerFor((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType("text/plain;charset=UTF-8");
+                            response.getWriter().write("Forbidden");
+                        }, API_MATCHER)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Public pages
-                        .requestMatchers("/", "/clubs", "/events", "/login", "/register", "/css/**", "/js/**", "/error", "/favicon.ico").permitAll()
-                        // Event detail page should be viewable when logged in (and is the redirect target after registration)
-                        .requestMatchers("/events/*").authenticated()
-                        // Web actions
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/events/*/register").hasRole("STUDENT")
+                        // Static
+                        .requestMatchers("/css/**", "/js/**", "/error", "/favicon.ico").permitAll()
+
+                        // Auth pages/actions
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/login", "/register").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/login", "/register", "/logout").permitAll()
+
+                        // Public browsing pages (OPTIONAL: if you want these to require login, remove them)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/clubs", "/events").permitAll()
+
+                        // API auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Public read-only APIs used by UI
+
+                        // Public read-only APIs used by UI + tests
                         .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                "/api/events/club/*",
+                                "/api/events/*/registrations/summary",
                                 "/api/events/*/ratings/summary",
                                 "/api/comments/**").permitAll()
+
+                        // Home/dashboard: requires auth
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/").authenticated()
+
+                        // Event detail page should be viewable when logged in (and is the redirect target after registration)
+                        .requestMatchers("/events/*").authenticated()
+
+                        // Web actions
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/events/*/register").hasRole("STUDENT")
+
                         // club-admin pages are restricted by membership (club-scoped). Require login here; deeper checks happen in controller.
                         .requestMatchers("/club-admin/**").authenticated()
+
                         // Students can apply to create a club
                         .requestMatchers("/club-applications/apply", "/club-applications/apply-club", "/club-applications/submit").authenticated()
                         .requestMatchers("/club-applications/**").hasRole("PLATFORM_ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("PLATFORM_ADMIN")
                         .anyRequest().authenticated()
                 );
+
         http.addFilterBefore(jwtAuthenticationFilterForChain, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

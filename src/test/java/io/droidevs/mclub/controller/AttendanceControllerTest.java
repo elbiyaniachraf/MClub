@@ -64,7 +64,7 @@ class AttendanceControllerTest {
         mvc.perform(post("/api/attendance/check-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"raw\"}"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isForbidden());
     }
 
     @Test

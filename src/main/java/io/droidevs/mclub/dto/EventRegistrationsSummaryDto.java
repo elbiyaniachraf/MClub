@@ -9,6 +9,5 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EventRegistrationsSummaryDto {
     private UUID eventId;
-    private long registrations;
+    private long count;
 }
-

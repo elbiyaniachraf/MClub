@@ -89,4 +89,3 @@ class EventRatingControllerTest {
         verify(eventService).requireCanManageEvent("manager@example.com", eventId);
     }
 }
-

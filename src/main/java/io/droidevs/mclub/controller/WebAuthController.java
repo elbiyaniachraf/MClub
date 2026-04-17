@@ -8,6 +8,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +22,10 @@ public class WebAuthController {
     private final AuthService authService;
 
     @GetMapping("/login")
-    public String showLoginForm(Model model) {
+    public String showLoginForm(Model model, Authentication auth) {
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null && !"anonymousUser".equals(auth.getPrincipal())) {
+            return "redirect:/";
+        }
         model.addAttribute("loginRequest", new AuthRequest());
         return "login";
     }
@@ -47,7 +51,10 @@ public class WebAuthController {
     }
 
     @GetMapping("/register")
-    public String showRegisterForm(Model model) {
+    public String showRegisterForm(Model model, Authentication auth) {
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null && !"anonymousUser".equals(auth.getPrincipal())) {
+            return "redirect:/";
+        }
         model.addAttribute("registerRequest", new RegisterRequest());
         return "register";
     }
@@ -73,4 +80,3 @@ public class WebAuthController {
         return "redirect:/login?logout";
     }
 }
-

@@ -45,7 +45,7 @@ mclub:
     openai:
       enabled: true
       base-url: https://api.openai.com
-      api-key: ${OPENAI_API_KEY}
+      api-key: ${OPENAI_API_KEY:}
       model: gpt-4o-mini
       timeout-ms: 15000
 
@@ -84,4 +84,3 @@ logging:
     org.flywaydb: DEBUG
     org.springframework.boot.autoconfigure.flyway: DEBUG
     org.hibernate.tool.schema: DEBUG
-

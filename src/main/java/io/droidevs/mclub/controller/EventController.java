@@ -1,3 +1,4 @@
+
 package io.droidevs.mclub.controller;
 
 import io.droidevs.mclub.dto.*;
@@ -39,6 +40,7 @@ public class EventController {
 
     @GetMapping("/{eventId}/registrations/summary")
     public ResponseEntity<EventRegistrationsSummaryDto> registrationsSummary(@PathVariable UUID eventId) {
+        // tests + UI expect "count"
         return ResponseEntity.ok(new EventRegistrationsSummaryDto(eventId, registrationService.countRegistrations(eventId)));
     }
 
