@@ -19,7 +19,12 @@ public class VectorRetrievalService {
     public List<VectorSearchResult> retrieveSimilar(ConversationContext ctx, String userMessage, int topK) {
         List<Double> emb = embeddingService.embed(userMessage);
         String literal = VectorSearchService.toPgvectorLiteral(emb);
-        return vectorIndexRepository.search(literal, topK, null, null, null);
+
+        java.util.UUID clubId = ctx != null ? ctx.clubScopeId().orElse(null) : null;
+        java.util.UUID eventId = ctx != null ? ctx.eventScopeId().orElse(null) : null;
+
+        // If eventId is present, it’s the strongest scope. Club scope can remain as an additional filter.
+        return vectorIndexRepository.search(literal, topK, null, clubId, eventId);
     }
 
     // Keep helper for any other callers

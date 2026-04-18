@@ -25,7 +25,6 @@ public class WhatsappIdentityService {
         Optional<UUID> userId = linkService.findUserIdByPhone(fromPhoneE164);
         Optional<String> email = userId.flatMap(id -> userRepository.findById(id)).map(User::getEmail);
         boolean linked = userId.isPresent();
-        return new ConversationContext(fromPhoneE164, userId, email, linked);
+        return ConversationContext.ofUnscoped(fromPhoneE164, userId, email, linked);
     }
 }
-

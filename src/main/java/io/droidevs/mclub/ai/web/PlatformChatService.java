@@ -33,17 +33,17 @@ public class PlatformChatService {
     private ConversationContext buildContext(String from) {
         var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null) {
-            return new ConversationContext(from, java.util.Optional.empty(), java.util.Optional.empty(), false);
+            return ConversationContext.ofUnscoped(from, java.util.Optional.empty(), java.util.Optional.empty(), false);
         }
 
         // In this project the principal username is the email (e.g. Jwt or form login).
         String email = auth.getName();
         if (email == null || email.isBlank() || "anonymousUser".equalsIgnoreCase(email)) {
-            return new ConversationContext(from, java.util.Optional.empty(), java.util.Optional.empty(), false);
+            return ConversationContext.ofUnscoped(from, java.util.Optional.empty(), java.util.Optional.empty(), false);
         }
 
         var userId = userRepository.findByEmail(email).map(io.droidevs.mclub.domain.User::getId);
         boolean linked = userId.isPresent();
-        return new ConversationContext(from, userId, java.util.Optional.of(email), linked);
+        return ConversationContext.ofUnscoped(from, userId, java.util.Optional.of(email), linked);
     }
 }
