@@ -85,7 +85,18 @@ public class AgentLoopExecutor {
 
             var tool = toolRegistry.get(call.toolName());
             log.debug("AgentLoop step={} executing tool={}", step, call.toolName());
-            var result = tool.execute(call, ctx);
+
+            io.droidevs.mclub.ai.tools.ToolResult result;
+            try {
+                result = tool.execute(call, ctx);
+            } catch (Exception e) {
+                log.warn("AgentLoop tool execution failed toolName={} error={}", call.toolName(), e.toString());
+                result = io.droidevs.mclub.ai.tools.ToolResult.of(
+                        "I tried to perform the action ('" + call.toolName() + "') but the server returned an error: " +
+                                (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName())
+                );
+            }
+
             log.debug("AgentLoop step={} tool result messageChars={}", step, result.humanMessage() != null ? result.humanMessage().length() : 0);
 
             localSession = appendAssistant(localSession, "Tool[" + call.toolName() + "]: " + result.humanMessage());

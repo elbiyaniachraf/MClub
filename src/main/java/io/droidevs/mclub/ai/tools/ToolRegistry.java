@@ -26,9 +26,18 @@ public class ToolRegistry {
     public Tool get(String name) {
         Tool t = byName.get(name);
         if (t == null) {
-            throw new IllegalArgumentException("Unknown tool: " + name);
+            return new Tool() {
+                @Override
+                public String name() {
+                    return name;
+                }
+
+                @Override
+                public ToolResult execute(io.droidevs.mclub.ai.rag.ToolCall call, io.droidevs.mclub.ai.conversation.ConversationContext ctx) {
+                    return ToolResult.of("Unknown tool: '" + name + "'. Please try a different request.");
+                }
+            };
         }
         return t;
     }
 }
-

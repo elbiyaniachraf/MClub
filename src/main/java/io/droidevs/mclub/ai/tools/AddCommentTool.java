@@ -4,6 +4,7 @@ import io.droidevs.mclub.ai.conversation.ConversationContext;
 import io.droidevs.mclub.ai.rag.ToolCall;
 import io.droidevs.mclub.domain.CommentTargetType;
 import io.droidevs.mclub.dto.CommentCreateRequest;
+import io.droidevs.mclub.exception.ResourceNotFoundException;
 import io.droidevs.mclub.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,25 +30,40 @@ public class AddCommentTool implements Tool {
             return ToolResult.of("To post comments, please link your account first (OTP linking). Ask me: 'link my account'.");
         }
 
-
         Object targetTypeRaw = call.arguments().get("targetType");
         Object targetIdRaw = call.arguments().get("targetId");
         Object textRaw = call.arguments().get("text");
 
         if (targetTypeRaw == null || targetIdRaw == null || textRaw == null) {
-            return ToolResult.of("Please provide targetType (event/activity), targetId, and text.");
+            return ToolResult.of("Please provide targetType (EVENT/ACTIVITY), targetId, and text.");
         }
 
-        CommentTargetType type = CommentTargetType.valueOf(String.valueOf(targetTypeRaw).toUpperCase());
-        UUID targetId = UUID.fromString(String.valueOf(targetIdRaw));
+        CommentTargetType type;
+        try {
+            type = CommentTargetType.valueOf(String.valueOf(targetTypeRaw).toUpperCase());
+        } catch (Exception e) {
+            return ToolResult.of("Invalid targetType. Use EVENT or ACTIVITY.");
+        }
+
+        UUID targetId;
+        try {
+            targetId = UUID.fromString(String.valueOf(targetIdRaw));
+        } catch (Exception e) {
+            return ToolResult.of("Invalid targetId. Expected UUID.");
+        }
 
         CommentCreateRequest req = new CommentCreateRequest();
         req.setContent(String.valueOf(textRaw));
         req.setParentId(null);
 
-        commentService.addComment(type, targetId, req, email);
-        return ToolResult.of("Comment posted.");
+        try {
+            commentService.addComment(type, targetId, req, email);
+            return ToolResult.of("Comment posted.");
+        } catch (ResourceNotFoundException e) {
+            return ToolResult.of("I couldn't find that item to comment on. Please check the id and try again.");
+        } catch (RuntimeException e) {
+            String msg = e.getMessage() == null ? "" : e.getMessage();
+            return ToolResult.of("I couldn't post the comment: " + msg);
+        }
     }
 }
-
-

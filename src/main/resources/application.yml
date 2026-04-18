@@ -45,7 +45,7 @@ mclub:
     openai:
       enabled: true
       base-url: https://api.openai.com
-      api-key: ${OPENAI_API_KEY:}
+      api-key: ${OPENAI_API_KEY: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}
       model: gpt-4o-mini
       timeout-ms: 15000
 

@@ -14,6 +14,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.*;
 
@@ -28,6 +31,8 @@ import java.util.*;
 @EnableConfigurationProperties(OpenAiProperties.class)
 public class OpenAiLlmClient implements LlmClient {
 
+    private static final Logger log = LoggerFactory.getLogger(OpenAiLlmClient.class);
+
     private final OpenAiProperties props;
     private final ToolSchemaProvider toolSchemaProvider;
     private final ObjectMapper objectMapper;
@@ -35,6 +40,11 @@ public class OpenAiLlmClient implements LlmClient {
 
     @Override
     public LlmDecision decide(String prompt) {
+        if (props.getApiKey() == null || props.getApiKey().isBlank()) {
+            log.error("OpenAI is enabled but mclub.ai.openai.api-key is empty. Set it via environment variable OPENAI_API_KEY or application.yml");
+            return LlmDecision.answer("OpenAI is enabled but the API key is missing. Please configure OPENAI_API_KEY (or mclub.ai.openai.api-key) and restart the app.");
+        }
+
         WebClient client = WebClient.builder()
                 .baseUrl(props.getBaseUrl())
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + props.getApiKey())
@@ -51,42 +61,76 @@ public class OpenAiLlmClient implements LlmClient {
                 Map.of("role", "user", "content", prompt)
         ));
 
-        JsonNode root = client.post()
-                .uri("/v1/chat/completions")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(JsonNode.class)
-                .timeout(Duration.ofMillis(props.getTimeoutMs()))
-                .block();
+        try {
+            JsonNode root = postWithRetry(client, body);
 
-        if (root == null) {
-            return LlmDecision.answer("I couldn't reach the language model. Please try again.");
-        }
-
-        JsonNode choice0 = root.path("choices").path(0);
-        JsonNode message = choice0.path("message");
-
-        // tool call path
-        JsonNode toolCalls = message.path("tool_calls");
-        if (toolCalls.isArray() && toolCalls.size() > 0) {
-            JsonNode tc = toolCalls.get(0);
-            String toolName = tc.path("function").path("name").asText(null);
-            String argsJson = tc.path("function").path("arguments").asText("{}");
-
-            if (toolName == null || toolName.isBlank()) {
-                return LlmDecision.answer("Model returned an invalid tool call.");
+            if (root == null) {
+                return LlmDecision.answer("I couldn't reach the language model. Please try again.");
             }
 
-            Map<String, Object> args = parseArgs(argsJson);
-            return LlmDecision.tool(new ToolCall(toolName, args));
-        }
+            JsonNode choice0 = root.path("choices").path(0);
+            JsonNode message = choice0.path("message");
 
-        // normal answer
-        String content = message.path("content").asText("");
-        if (content == null || content.isBlank()) {
-            content = "I don't have an answer for that yet.";
+            // tool call path
+            JsonNode toolCalls = message.path("tool_calls");
+            if (toolCalls.isArray() && toolCalls.size() > 0) {
+                JsonNode tc = toolCalls.get(0);
+                String toolName = tc.path("function").path("name").asText(null);
+                String argsJson = tc.path("function").path("arguments").asText("{}");
+
+                if (toolName == null || toolName.isBlank()) {
+                    return LlmDecision.answer("Model returned an invalid tool call.");
+                }
+
+                Map<String, Object> args = parseArgs(argsJson);
+                return LlmDecision.tool(new ToolCall(toolName, args));
+            }
+
+            // normal answer
+            String content = message.path("content").asText("");
+            if (content == null || content.isBlank()) {
+                content = "I don't have an answer for that yet.";
+            }
+            return LlmDecision.answer(content);
+        } catch (org.springframework.web.reactive.function.client.WebClientResponseException.Unauthorized e) {
+            log.error("OpenAI /v1/chat/completions returned 401 Unauthorized. Check your OPENAI_API_KEY and that it has access to model='{}'", props.getModel());
+            return LlmDecision.answer("OpenAI authentication failed (401). Please verify OPENAI_API_KEY and restart the app.");
+        } catch (org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests e) {
+            log.warn("OpenAI /v1/chat/completions rate limited (429). Try again in a moment.");
+            return LlmDecision.answer("The AI service is rate-limiting requests right now (429). Please wait a few seconds and try again.");
         }
-        return LlmDecision.answer(content);
+    }
+
+    private JsonNode postWithRetry(WebClient client, Map<String, Object> body) {
+        int maxAttempts = 3;
+        long baseDelayMs = 400;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return client.post()
+                        .uri("/v1/chat/completions")
+                        .bodyValue(body)
+                        .retrieve()
+                        .bodyToMono(JsonNode.class)
+                        .timeout(Duration.ofMillis(props.getTimeoutMs()))
+                        .block();
+            } catch (org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests e) {
+                if (attempt == maxAttempts) throw e;
+
+                long sleep = baseDelayMs * (1L << (attempt - 1));
+                // slightly jitter to avoid thundering herd
+                sleep += new java.util.Random().nextInt(150);
+
+                log.warn("OpenAI /v1/chat/completions returned 429 (attempt {}/{}). Backing off {}ms", attempt, maxAttempts, sleep);
+                try {
+                    Thread.sleep(sleep);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -98,4 +142,3 @@ public class OpenAiLlmClient implements LlmClient {
         }
     }
 }
-
