@@ -36,7 +36,10 @@ public class PromptBuilder {
 
                 Tool / safety rules:
                 - NEVER guess UUIDs or database IDs.
-                - If an action needs an id (eventId/clubId/targetId) and it is not explicitly present in retrieved context, call a READ tool first (search_semantic, list_events, list_clubs, list_my_clubs) to obtain IDs.
+                - Prefer scoped tools first when available:
+                  - search_events_in_context / search_clubs_in_context
+                  - then search_events / search_clubs / search_semantic
+                - If a search tool returns a candidates list, do NOT copy UUIDs from text. Use pick_candidate with the 'candidates' array and the chosen index.
                 - If multiple candidates exist, ask the user to choose (numbered list).
                 - Do not claim you performed an action unless a tool call was executed.
                 - If user is not linked, do not perform actions. Explain linking.
@@ -57,5 +60,3 @@ public class PromptBuilder {
                 """.formatted(ctx.linked(), facts, recentEvents, semanticHits, history);
     }
 }
-
-

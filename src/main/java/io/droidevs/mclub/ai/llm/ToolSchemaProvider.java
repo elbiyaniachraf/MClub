@@ -78,6 +78,24 @@ public class ToolSchemaProvider {
                         objectSchema(Map.of(
                                 "eventId", Map.of("type", "string", "description", "UUID of the event")
                         ), List.of("eventId")));
+                case "search_events_in_context" -> tool("search_events_in_context",
+                        "Search events but automatically scope to the current page context (club/event) if available.",
+                        objectSchema(Map.of(
+                                "query", Map.of("type", "string"),
+                                "limit", Map.of("type", "integer", "minimum", 1, "maximum", 10)
+                        ), List.of("query")));
+                case "search_clubs_in_context" -> tool("search_clubs_in_context",
+                        "Search clubs but automatically use the current page club context if available.",
+                        objectSchema(Map.of(
+                                "query", Map.of("type", "string"),
+                                "limit", Map.of("type", "integer", "minimum", 1, "maximum", 10)
+                        ), List.of("query")));
+                case "pick_candidate" -> tool("pick_candidate",
+                        "Pick a single candidate from a candidates list previously returned by a search tool.",
+                        objectSchema(Map.of(
+                                "index", Map.of("type", "integer", "minimum", 1, "description", "1-based index"),
+                                "candidates", Map.of("type", "array", "description", "The candidates array from a previous tool result")
+                        ), List.of("index", "candidates")));
                 default -> tool(t.name(), "Tool: " + t.name(), objectSchema(Map.of(), List.of()));
             });
         }
